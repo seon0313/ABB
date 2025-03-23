@@ -13,4 +13,4 @@ class EventModule(module.EventModule):
             'data': '',
             'time': time.time() 
         }
-        return json.dumps(a)
+        return (json.dumps(a), None)
