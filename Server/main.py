@@ -8,7 +8,6 @@ import cv2
 import base64
 import numpy as np
 import time
-import numpy as np
 from io import BytesIO
 import queue
 import threading
@@ -18,7 +17,9 @@ clients_lock = threading.Lock()
 
 save_data = {}
 save_data_lock = threading.Lock()
-
+camera_matrix = np.array([[600, 0, 320],
+                          [0, 600, 240],
+                          [0, 0, 1]], dtype=np.float32)
 
 # Base64 데이터를 이미지로 변환하는 함수
 def base64_to_image(base64_string):
@@ -29,8 +30,12 @@ def base64_to_image(base64_string):
     # 이미지 디코딩
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return img
-
+marker_length = 0.05 # 5cm
 serverModuleList: dict = {}
+dist_coeffs = np.zeros((5, 1), dtype=np.float32)
+
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
+parameters = cv2.aruco.DetectorParameters()
 
 # 클라이언트가 연결될 때 호출되는 핸들러
 async def handle_connection(websocket):
@@ -45,69 +50,53 @@ async def handle_connection(websocket):
 
         with clients_lock:
             client_queues[client_id] = queue.Queue()
-        
-        if type == 'bot':
-            
+
+
+        if type == 'robot':
             while True:
+                print('???')
                 a = {
                     'type': 'get_image',
                     'data': '',
                     'time': time.time() 
                 }
-                await websocket.recv(json.dumps(a))
-
-        while True:
-            data =  websocket.send(serverModuleList[type].run())
-            await data[0]
-            if data[1] != None:
-                if data[1]['type'] == 'save':
+                await websocket.send(json.dumps(a))
+                msg = await websocket.recv()
+                msg = json.loads(msg)
+                if msg['type'] == 'image':
+                    img_data = base64_to_image(msg['data'])
+                    corners, ids, rejected = cv2.aruco.detectMarkers(img_data, aruco_dict, parameters=parameters)
+                    if ids is not None:
+                        print(f"감지된 마커 수: {len(ids)}")
+                        
+                        # 포즈 추정
+                        rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, marker_length, camera_matrix, dist_coeffs)
+                        
+                        # 감지된 마커와 축 그리기
+                        for i in range(len(ids)):
+                            print(f"ID: {ids[i][0]}, 코너: {corners[i]}")
+                            
+                            # 마커 테두리 그리기
+                            cv2.aruco.drawDetectedMarkers(img_data, corners, ids)
+                            
+                            # x, y, z 축 그리기
+                            cv2.drawFrameAxes(img_data, camera_matrix, dist_coeffs, rvecs[i], tvecs[i], marker_length * 0.5)
                     with save_data_lock:
-                        save_data[data[1]['data']['key']] = data[1]['data']['value']
-
-            msg = await websocket.recv()
-            print(f'get>>> {msg}')
-            msg = json.loads(msg)
-            if msg['type'] == 'image':
-                img_data = base64_to_image(msg['data'])
-                with save_data_lock:
-                    save_data['image'] = img_data
-                cv2.imshow('Real-time Image', img_data)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-            elif msg['type'] == 'get':
-                with save_data_lock:
-                    result = {
-                        'type': 'return',
-                        'data': {
-                            'key': msg['data'],
-                            'value': save_data.get(msg['data'])
-                        }
-                    }
-                    await websocket.send(json.dumps(result))
-
-        return
-        while True:
-            # 클라이언트로부터 메시지 수신
-            message = await websocket.recv()
-            print(f"클라이언트로부터 받은 메시지: {message}")
-
-            response = {'message': f"서버가 받은 메시지: {message}"}
-            await websocket.send(json.dumps(response))
-            print(f"클라이언트에게 보낸 메시지: {response}")
+                        save_data['image'] = img_data
+                    cv2.imshow('Real-time Image', img_data)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
     except websockets.ConnectionClosed:
         print("클라이언트 연결이 종료되었습니다.")
 
-# WebSocket 서버 시작 함수
 async def start_server():
-    # 서버를 localhost:8765에서 실행
     server = await websockets.serve(handle_connection, "0.0.0.0", 8765)
     print(f"Server Start [port: {8765}]")
     await server.wait_closed()
 
-# 이벤트 루프 실행
 if __name__ == "__main__":
     print('Module Loading')
-    files = os.listdir('C:/Users/SEON/Documents/SBR/Server/serverEvent')
+    files = os.listdir('C:/Users/SEON/Documents/Project_ABB/Server/serverEvent')
     print(files)
     for i in files:
         print(i)
