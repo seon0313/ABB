@@ -96,7 +96,7 @@ async def start_server():
 
 if __name__ == "__main__":
     print('Module Loading')
-    files = os.listdir('C:/Users/SEON/Documents/Project_ABB/Server/serverEvent')
+    files = os.listdir('/home/SEON/Documents/ABB/Server/serverEvent')
     print(files)
     for i in files:
         print(i)
