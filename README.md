@@ -2,7 +2,9 @@
 *망치질하다가 접질렸봇*
 서울로봇고 2025 3-1 1팀 졸업작품
 
-Program: [Project_ABB Programe](https://github.com/seon0313/Project_ABB_Program)
+- Program: [Project_ABB Programe](https://github.com/seon0313/Project_ABB_Program)
+- Program: [ABB Server](https://github.com/seon0313/ABB_Server)
+- Program: [ABB RealTime API](https://github.com/seon0313/ABB_RealTime_AI)
 
 ## 목차
 
