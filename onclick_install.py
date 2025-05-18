@@ -9,7 +9,8 @@ if __name__ == '__main__':
         'opencv-python',
         'opencv-contrib-python',
         'asyncio',
-        'flask'
+        'flask',
+        'matplotlib'
     ]
     print('설치 될 module list')
     for i in install_module_list: print(f'\t- {i}')

@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
 
 def generate_aruco_marker(marker_id, size=200):
     img = np.zeros((size, size, 1), dtype="uint8")
@@ -24,9 +24,9 @@ def generate_aruco_marker(marker_id, size=200):
 
     cv2.aruco.generateImageMarker(aruco_dict, marker_id, size, img, 1)
     
-    cv2.imwrite(f"aruco_marker_{marker_id}.png", img)
-    plt.imshow(img)
-    plt.show()
+    cv2.imwrite(f"./markers/{marker_id}.png", img)
+    #plt.imshow(img)
+    #plt.show()
 
 def getInt(msg: str = ':\t', re_try_msg: str = 're:\t') -> int:
     val = input(msg)
@@ -37,7 +37,7 @@ def getInt(msg: str = ':\t', re_try_msg: str = 're:\t') -> int:
             val = input(re_try_msg)
 
 if __name__ == '__main__':
-    marker_id = getInt('Enter marker_id:\t', 'enter only int:\t')
+    #marker_id = getInt('Enter marker_id:\t', 'enter only int:\t')
     marker_size = 200
-
-    generate_aruco_marker(marker_id, marker_size)
+    for i in range(400):
+        generate_aruco_marker(i, marker_size)

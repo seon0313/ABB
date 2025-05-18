@@ -112,13 +112,5 @@ def main():
     else:
         print("경로를 찾을 수 없습니다.")
 
-    pygame.init()
-    sc = pygame.display.set_mode((800,800))
-
-    for y, i in enumerate(maze):
-        x = len(i)
-        if ()
-        for x, l in enumerate(i):
-
 
 if __name__ == '__main__': main()
