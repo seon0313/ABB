@@ -20,11 +20,37 @@
 
 ## 프로그램
 
-`/Server` WebSocket 서버
-`/Bot` ABB 동작 코드
+ABB는 추윤선의 독자 개발 시스템을 구동합니다.
 
-추후 branch를 나눌 예정입니다.
 
+|파일명|설명|
+|---|---|
+|`robot.py`|로봇의 메인 클래스|
+|`log.py`|프로그램의 Log 기록 프로그램|
+|`RealTime.py`|[ABB RealTime API](https://github.com/seon0313/ABB_RealTime_AI)|
+|`server.py`|Websocket 서버. `robot.py`의 통제를 받는다. 외부 프로그램과 소통을 위한 기능|
+|`system.py`|`Event`, `EventListener`, `RobotSystem`등 로봇 시스템 관련 코드|
+
+아래는 ABB의 시스템 작동 구조도 입니다.
+
+```
+Robot
+│  └── Event, RobotSystem
+│
+├── Server
+│
+├── RealTime
+│
+├── Controller
+│
+└── Background
+```
+
+위 하위 클래스들은 `Event`와 `EventListener`를 이용하여 서로 소통합니다.
+
+각 하위 노드들은 별개의 Thread에서 동작합니다.
+
+`RobotSystem`클래스에서 로봇의 Event, Log시스템, 변수를 저장하고 관리합니다.
 
 ## 가이드
 

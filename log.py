@@ -5,6 +5,7 @@ class LogType(Enum):
     SERVER = 1
     AI = 2
     CONTROLLER = 3
+    BACKGROUND = 4
     ROBOT = 0
     ALL = -1
 

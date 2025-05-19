@@ -1,4 +1,5 @@
 from log import Log
+from enum import Enum
 
 class EventListener:
     def __init__(self, value=None):
@@ -21,5 +22,6 @@ class Event:
 
 class RobotSystem:
     def __init__(self, event: Event, log: Log):
-        self.event = event
-        self.log = log
+        self.event: Event = event
+        self.log: Log = log
+        self.values: dict = {}
