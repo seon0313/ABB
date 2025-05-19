@@ -34,6 +34,7 @@ class Log:
         t = time.strftime('[%Y/%m/%d %H:%M:%S]', time.localtime(time.time()))
         logmsg = f'{t} {logType.name}-{messageType.name} | {message}\n'
         self.logfile.write(logmsg)
+        self.logfile.flush()
         print(logmsg, end='')
         if len(self.logs)>self.saveLogLine: self.logs = self.logs[1:]
     

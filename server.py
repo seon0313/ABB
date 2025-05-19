@@ -30,15 +30,31 @@ class Server:
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         return img
     
-    async def client(websocket):
-        client_id = id(websocket)
-        _ip, _port = websocket.remote_address
-        print(f'joined new Client')
+    async def client(self, websocket):
+        try:
+            client_id = id(websocket)
+            _ip, _port = websocket.remote_address
+            self.__system__.log.i(LogType.SERVER,
+                                  f"Connected New Client id: {client_id} | {_ip}:{_port}")
+
+            pass
+
+            self.__system__.log.i(LogType.SERVER,
+                                  f"Disconnected Client id: {client_id} | {_ip}:{_port}")
+        except Exception as e:
+            self.__system__.log.e(LogType.SERVER,f"Client Error {e}")
     async def __start_server__(self):
-        self.__server__ = await websockets.serve(self.client, self.host, self.port)
-        await self.__server__.wait_closed()
-    async def close(self):
+        try:
+            self.__system__.log.i(LogType.SERVER, "Opening Server...")
+            self.__server__ = await websockets.serve(self.client, self.__host__, self.__port__)
+            self.__system__.log.i(LogType.SERVER, "Server Opened")
+            await self.__server__.wait_closed()
+        except Exception as e:
+            self.__system__.log.e(LogType.SERVER,
+                                  f"Start Error - {e}")
+    def close(self):
         if self.__server__:
             self.__server__.close()
+        self.__system__.log.i(LogType.SERVER, "Server Close")
     def run(self):
         asyncio.run(self.__start_server__())

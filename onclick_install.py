@@ -10,7 +10,13 @@ if __name__ == '__main__':
         'opencv-contrib-python',
         'asyncio',
         'flask',
-        'matplotlib'
+        'matplotlib',
+
+        'wheel -U',
+        'setuptools -U',
+        'websocket-client',
+        'pyaudio',
+        'noisereduce',
     ]
     print('설치 될 module list')
     for i in install_module_list: print(f'\t- {i}')
