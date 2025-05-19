@@ -2,6 +2,7 @@ from enum import Enum, auto
 import threading
 from server import Server
 from log import Log, LogMessageType, LogType
+from system import Event, EventListener, RobotSystem
 
 class RobotType(Enum):
     ABB = "abb"
@@ -12,8 +13,13 @@ class Robot:
         self.robot_name: str = name
         self.robot_type: RobotType = robot_type
 
-        self.__log__: Log = Log()
-        self.__server__: Server = Server()
+        self.system:RobotSystem = RobotSystem(
+            event= Event(),
+            log=Log()
+        )
+        self.__server__: Server = Server(self.system)
+
+        self.system.event.sendEvent('server', 'Hello!')
 
         self.__aiThread__: threading.Thread = None
         self.__aiThreadEvent__: threading.Event = threading.Event()
@@ -21,6 +27,8 @@ class Robot:
         self.__serverThreadEvent__: threading.Event = threading.Event()
         self.__controllerThread__: threading.Thread = None
         self.__controllerThreadEvent__: threading.Event = threading.Event()
+
+        self.system.log.i(LogType.ROBOT, "Load END")
 
     def server(self):
         pass
@@ -35,7 +43,8 @@ class Robot:
     def run(self):
         self.threading.Thread()
     def close(self):
-        self.__log__.close()
+        self.system.log.i(LogType.ROBOT, "Robot Off")
+        self.system.log.close()
 
 if __name__ == '__main__':
     robot = Robot('ABB Type1', RobotType.ABB)
