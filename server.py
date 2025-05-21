@@ -19,12 +19,15 @@ class Server:
         self.__system.log.i(LogType.SERVER, "Server Load END")
 
         self.__commands: dict = {
-            'get': self.__commandGet
+            'get': self.__commandGet,
+            'get_commands': self.__commandGetcmds
         }
     
     def __commandGet(self, data: dict):
         self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
         return self.__system.values
+    def __commandGetcmds(self, data: dict):
+        return {'commands': [str(i) for i in self.__commands.keys()]}
 
     def __listener(self, *arg):
         self.__system.log.i(LogType.SERVER, f"change value: {self.__system.values}")
