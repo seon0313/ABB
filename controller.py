@@ -21,5 +21,7 @@ class Controller:
             time.sleep(2)
 
 class ABBController(Controller):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, system: RobotSystem):
+        super().__init__(system)
+    def run(self, event):
+        return super().run(event)

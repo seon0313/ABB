@@ -27,7 +27,7 @@ class Robot:
             f.close()
         self.__realTime: RealTime = RealTime(OPENAI_API_KEY)
 
-        self.__controller: Controller = Controller(self.system)
+        self.__controller: Controller = ABBController(self.system)
 
         self.system.event.sendEvent('server', 'Hello!')
 
