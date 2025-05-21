@@ -2,12 +2,14 @@ from enum import Enum
 import time
 
 class LogType(Enum):
+    ALL = -1
+    ROBOT = 0
     SERVER = 1
     AI = 2
     CONTROLLER = 3
     BACKGROUND = 4
-    ROBOT = 0
-    ALL = -1
+    REALTIME = 5
+    
 
 class LogMessageType(Enum):
     NORMAL = 0

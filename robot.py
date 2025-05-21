@@ -6,6 +6,7 @@ from system import Event, EventListener, RobotSystem
 from RealTime import RealTime
 import time
 import random
+from controller import Controller, ABBController
 
 class RobotType(Enum):
     ABB = "abb"
@@ -20,43 +21,54 @@ class Robot:
             event= Event(),
             log=Log()
         )
-        self.__server__: Server = Server(self.system)
+        self.__server: Server = Server(self.system)
         with open('./key.txt', 'r') as f:
             OPENAI_API_KEY = f.readline()
             f.close()
-        self.__realTime__:RealTime = RealTime(OPENAI_API_KEY)
+        self.__realTime: RealTime = RealTime(OPENAI_API_KEY)
+
+        self.__controller: Controller = Controller(self.system)
 
         self.system.event.sendEvent('server', 'Hello!')
 
-        self.__aiThread__: threading.Thread = None
-        self.__aiThreadEvent__: threading.Event = threading.Event()
-        self.__serverThread__: threading.Thread = None
-        self.__serverThreadEvent__: threading.Event = threading.Event()
-        self.__controllerThread__: threading.Thread = None
-        self.__controllerThreadEvent__: threading.Event = threading.Event()
-        self.__backgroundThread__: threading.Thread = None
-        self.__backgroundThreadEvent__: threading.Event = threading.Event()
+        self.__aiThread: threading.Thread = None
+        self.__aiThreadEvent: threading.Event = threading.Event()
+        self.__serverThread: threading.Thread = None
+        self.__serverThreadEvent: threading.Event = threading.Event()
+        self.__controllerThread: threading.Thread = None
+        self.__controllerThreadEvent: threading.Event = threading.Event()
+        self.__backgroundThread: threading.Thread = None
+        self.__backgroundThreadEvent: threading.Event = threading.Event()
+        self.__realTimeThread: threading.Thread = None
+        self.__realTimeThreadEvent: threading.Event = threading.Event()
 
         self.system.log.i(LogType.ROBOT, "Load END")
 
     def server(self):
-        threading.Thread(target=self.__server__.run, daemon=True).start()
-        while not self.__aiThreadEvent__.is_set(): pass
-        self.__server__.close()
-        self.system.log.i(LogType.ROBOT, "Server Thread Close")
+        threading.Thread(target=self.__server.run, daemon=True).start()
+        while not self.__aiThreadEvent.is_set(): pass
+        self.__server.close()
+        self.system.log.i(LogType.SERVER, "Server Thread Close")
 
+    def runRealTime(self):
+        try:
+            self.__realTime.connect()
+            while not self.__realTimeThreadEvent.is_set():
+                pass
+            self.__realTime.close()
+        except Exception as e:
+            self.system.log.e(LogType.REALTIME, e)
+        self.system.log.i(LogType.REALTIME, "RealTime Thread Close")
+    
     def runAI(self):
-        self.__realTime__.connect()
-        while not self.__aiThreadEvent__.is_set():
-            pass
-        self.__realTime__.close()
-        self.system.log.i(LogType.ROBOT, "AI Thread Close")
+        self.system.log.i(LogType.AI, "AI Thread Close")
 
     def controller(self):
-        pass
+        self.__controller.run(self.__controllerThreadEvent)
+        self.system.log.i(LogType.CONTROLLER, "Controller Thread Close")
 
     def background(self):
-        while not self.__backgroundThreadEvent__.is_set():
+        while not self.__backgroundThreadEvent.is_set():
             time.sleep(2)
             self.system.values = {
                 'motor1': 180,
@@ -64,31 +76,41 @@ class Robot:
                 'motor2': 280,
                 'input': 'Hello',
             }
-            self.system.event.sendEvent('server', 'changedValue')
+            self.system.event.sendEvent('controller', 'HelloWorld!')
         self.system.log.i(LogType.BACKGROUND, "Background Thread Close")
 
     def run(self):
-        self.__serverThread__ = threading.Thread(target=self.server, daemon=True)
-        self.__serverThread__.start()
+        self.__serverThread = threading.Thread(target=self.server, daemon=True)
+        self.__serverThread.start()
         self.system.log.i(LogType.ROBOT, "Start Server Thread")
 
-        self.__aiThread__ = threading.Thread(target=self.runAI, daemon=True)
-        self.__aiThread__.start()
+        self.__aiThread = threading.Thread(target=self.runAI, daemon=True)
+        self.__aiThread.start()
         self.system.log.i(LogType.ROBOT, "Start AI Thread")
 
-        self.__backgroundThread__ = threading.Thread(target=self.background, daemon=True)
-        self.__backgroundThread__.start()
-        self.system.log.i(LogType.ROBOT, "Start Background Thread")
-    def close(self):
-        self.__aiThreadEvent__.set()
-        self.__serverThreadEvent__.set()
-        self.__controllerThreadEvent__.set()
-        self.__backgroundThreadEvent__.set()
+        self.__realTimeThread = threading.Thread(target=self.runRealTime, daemon=True)
+        self.__realTimeThread.start()
+        self.system.log.i(LogType.REALTIME, "Start RealTime Thread")
 
-        self.__aiThread__.join()
-        self.__serverThread__.join()
-        #self.__controllerThread__.join()
-        self.__backgroundThread__.join()
+        self.__backgroundThread = threading.Thread(target=self.background, daemon=True)
+        self.__backgroundThread.start()
+        self.system.log.i(LogType.ROBOT, "Start Background Thread")
+
+        self.__controllerThread = threading.Thread(target=self.controller, daemon=True)
+        self.__controllerThread.start()
+        self.system.log.i(LogType.CONTROLLER, "Start Controller Thread")
+    def close(self):
+        self.__aiThreadEvent.set()
+        self.__serverThreadEvent.set()
+        self.__controllerThreadEvent.set()
+        self.__backgroundThreadEvent.set()
+        self.__realTimeThreadEvent.set()
+
+        self.__aiThread.join()
+        self.__serverThread.join()
+        self.__controllerThread.join()
+        self.__backgroundThread.join()
+        self.__realTimeThread.join()
         self.system.log.i(LogType.ROBOT, "Robot Off")
         self.system.log.close()
 
