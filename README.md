@@ -30,7 +30,7 @@ ABB는 추윤선의 독자 개발 시스템을 구동합니다.
 |`RealTime.py`|[ABB RealTime API](https://github.com/seon0313/ABB_RealTime_AI)|
 |`server.py`|Websocket 서버. `robot.py`의 통제를 받는다. 외부 프로그램과 소통을 위한 기능|
 |`system.py`|`Event`, `EventListener`, `RobotSystem`등 로봇 시스템 관련 코드|
-|'controller.py'|로봇의 움직임 제어 프로그램|
+|`controller.py`|로봇의 움직임 제어 프로그램|
 
 아래는 ABB의 시스템 작동 구조도 입니다.
 
