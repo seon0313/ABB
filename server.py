@@ -18,6 +18,14 @@ class Server:
         self.__system.event.addListener('server', self.el)
         self.__system.log.i(LogType.SERVER, "Server Load END")
 
+        self.__commands: dict = {
+            'get': self.__commandGet
+        }
+    
+    def __commandGet(self, data: dict):
+        self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
+        return self.__system.values
+
     def __listener(self, *arg):
         self.__system.log.i(LogType.SERVER, f"change value: {self.__system.values}")
         #print('server Listener - port: ', self.__port__, 'args: ', arg)
@@ -39,9 +47,8 @@ class Server:
             msg = await websocket.recv()
             msg = json.loads(msg)
 
-            if msg['type'] == 'get':
-                self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
-                await websocket.send(json.dumps(self.__system.values))
+            if self.__commands.get(msg['command']):
+                await websocket.send(json.dumps(self.__commands.get(msg['command'])(msg)))
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER, f'Error CLient id: {client_id} | {e}')
         self.__system.log.i(LogType.SERVER,
