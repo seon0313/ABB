@@ -20,8 +20,12 @@ class Server:
 
         self.__commands: dict = {
             'get': self.__commandGet,
-            'get_commands': self.__commandGetcmds
+            'get_commands': self.__commandGetcmds,
+            'move': self.__commandMove
         }
+    
+    def __commandMove(self, data: dict):
+        self.__system.event.sendEvent('controller', data)
     
     def __commandGet(self, data: dict):
         self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
@@ -51,7 +55,8 @@ class Server:
             msg = json.loads(msg)
 
             if self.__commands.get(msg['command']):
-                await websocket.send(json.dumps(self.__commands.get(msg['command'])(msg)))
+                value = self.__commands.get(msg['command'])(msg)
+                if value: await websocket.send(json.dumps(value))
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER, f'Error CLient id: {client_id} | {e}')
         self.__system.log.i(LogType.SERVER,
@@ -61,6 +66,8 @@ class Server:
     async def __start_server(self):
         try:
             self.__system.log.i(LogType.SERVER, "Opening Server...")
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             self.__server = await websockets.serve(self.__client, self.__host, self.__port)
             self.__system.log.i(LogType.SERVER, "Server Opened")
             await self.__server.wait_closed()

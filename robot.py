@@ -76,7 +76,7 @@ class Robot:
                 'motor2': 280,
                 'input': 'Hello',
             }
-            self.system.event.sendEvent('controller', 'HelloWorld!')
+            #self.system.event.sendEvent('controller', 'HelloWorld!')
         self.system.log.i(LogType.BACKGROUND, "Background Thread Close")
 
     def run(self):
