@@ -13,13 +13,16 @@ class RobotType(Enum):
     CAPSTONE = "capstone"
 
 class Robot:
-    def __init__(self, name: str, robot_type: RobotType):
+    def __init__(self, name: str, robot_type: RobotType, version: str):
         self.robot_name: str = name
+        self.robot_version: str = version
         self.robot_type: RobotType = robot_type
 
         self.system:RobotSystem = RobotSystem(
             event= Event(),
-            log=Log()
+            log=Log(),
+            name=self.robot_name,
+            version=self.robot_version
         )
         self.__server: Server = Server(self.system)
         with open('./key.txt', 'r') as f:

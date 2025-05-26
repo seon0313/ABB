@@ -20,6 +20,7 @@ class Server:
 
         self.__commands: dict = {
             'get': self.__commandGet,
+            'info': self.__commandInfo,
             'get_commands': self.__commandGetcmds,
             'move': self.__commandMove
         }
@@ -27,11 +28,14 @@ class Server:
     def __commandMove(self, data: dict):
         self.__system.event.sendEvent('controller', data)
     
+    def __commandInfo(self, data: dict):
+        return {'command':data['command'], 'name': self.__system.name, 'version': self.__system.version}
+    
     def __commandGet(self, data: dict):
         self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
         return self.__system.values
     def __commandGetcmds(self, data: dict):
-        return {'commands': [str(i) for i in self.__commands.keys()]}
+        return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
 
     def __listener(self, *arg):
         self.__system.log.i(LogType.SERVER, f"change value: {self.__system.values}")

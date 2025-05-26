@@ -21,7 +21,9 @@ class Event:
         self.__l[name] = listener
 
 class RobotSystem:
-    def __init__(self, event: Event, log: Log):
+    def __init__(self, event: Event, log: Log, name='test', version='test'):
         self.event: Event = event
         self.log: Log = log
         self.values: dict = {}
+        self.name: str = name
+        self.version: str = version
