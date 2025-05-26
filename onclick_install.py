@@ -13,6 +13,7 @@ if __name__ == '__main__':
         'matplotlib',
 
         'wheel -U',
+        'socket'
         'setuptools -U',
         'websocket-client',
         'pyaudio',
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     if a.lower()=='y':
         print('설치 시작')
         process = subprocess.Popen(
-            f'{sys.executable} -m pip install {' '.join(install_module_list)}',
+            f"{sys.executable} -m pip install {' '.join(install_module_list)}",
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
