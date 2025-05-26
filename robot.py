@@ -6,6 +6,7 @@ from system import Event, EventListener, RobotSystem
 from RealTime import RealTime
 import time
 import random
+import socket
 from controller import Controller, ABBController
 
 class RobotType(Enum):
