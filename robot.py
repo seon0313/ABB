@@ -119,7 +119,7 @@ class Robot:
         self.system.log.close()
 
 if __name__ == '__main__':
-    robot = Robot('ABB Type1', RobotType.ABB)
+    robot = Robot('ABB Type1', RobotType.ABB, '0.1 Alpha')
     robot.run()
     try:
         while True: pass
