@@ -13,7 +13,6 @@ if __name__ == '__main__':
         'matplotlib',
 
         'wheel -U',
-        'socket'
         'setuptools -U',
         'websocket-client',
         'pyaudio',
