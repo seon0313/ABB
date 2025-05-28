@@ -1,8 +1,8 @@
 import asyncio
 import websockets
 import json
-from util import dcToJson
-from system import message
+#from util import dcToJson
+#from system import message
 import os
 import cv2
 import base64
@@ -96,16 +96,7 @@ async def start_server():
 
 if __name__ == "__main__":
     print('Module Loading')
-    files = os.listdir('C:/Users/SEON/Documents/Project_ABB/Server/serverEvent')
-    print(files)
-    for i in files:
-        print(i)
-        if os.path.splitext(i)[1] == '.py':
-            print('?',i)
-            pkg = __import__(f'serverEvent.{i[:-3]}', fromlist=['EventModule'])
-            print(pkg)
-            name = pkg.EventModule().Name
-            serverModuleList[name] = pkg.EventModule
+
     print(serverModuleList)
     asyncio.run(start_server())
     cv2.destroyAllWindows()

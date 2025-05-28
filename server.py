@@ -16,7 +16,7 @@ class Server:
         self.__system = system
         self.el = EventListener(self.__listener)
         self.__system.event.addListener('server', self.el)
-        self.__system.log.i(LogType.SERVER, "Server Load END")
+        self.__system.event.i(LogType.SERVER, "Server Load END")
 
         self.__commands: dict = {
             'get': self.__commandGet,
@@ -32,13 +32,13 @@ class Server:
         return {'command':data['command'], 'name': self.__system.name, 'version': self.__system.version}
     
     def __commandGet(self, data: dict):
-        self.__system.log.w(LogType.SERVER, f"{self.__system.values}")
+        self.__system.event.w(LogType.SERVER, f"{self.__system.values}")
         return self.__system.values
     def __commandGetcmds(self, data: dict):
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
 
     def __listener(self, *arg):
-        self.__system.log.i(LogType.SERVER, f"change value: {self.__system.values}")
+        self.__system.event.i(LogType.SERVER, f"change value: {self.__system.values}")
         #print('server Listener - port: ', self.__port__, 'args: ', arg)
 
     def __base64_to_image(self, base64_string):
@@ -51,7 +51,7 @@ class Server:
         #try:
         client_id = id(websocket)
         _ip, _port = websocket.remote_address
-        self.__system.log.i(LogType.SERVER,
+        self.__system.event.i(LogType.SERVER,
                                 f"Connected New Client id: {client_id} | {_ip}:{_port}")
         #try:
         while True:
@@ -63,24 +63,24 @@ class Server:
                 if value: await websocket.send(json.dumps(value))
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER, f'Error CLient id: {client_id} | {e}')
-        self.__system.log.i(LogType.SERVER,
+        self.__system.event.i(LogType.SERVER,
                                 f"Disconnected Client id: {client_id} | {_ip}:{_port}")
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER,f"Client Error {e}")
     async def __start_server(self):
         try:
-            self.__system.log.i(LogType.SERVER, "Opening Server...")
+            self.__system.event.i(LogType.SERVER, "Opening Server...")
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             self.__server = await websockets.serve(self.__client, self.__host, self.__port)
-            self.__system.log.i(LogType.SERVER, "Server Opened")
+            self.__system.event.i(LogType.SERVER, "Server Opened")
             await self.__server.wait_closed()
         except Exception as e:
-            self.__system.log.e(LogType.SERVER,
+            self.__system.event.e(LogType.SERVER,
                                   f"Start Error - {e}")
     def close(self):
         if self.__server:
             self.__server.close()
-        self.__system.log.i(LogType.SERVER, "Server Close")
+        self.__system.event.i(LogType.SERVER, "Server Close")
     def run(self):
         asyncio.run(self.__start_server())

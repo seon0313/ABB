@@ -9,6 +9,7 @@ class LogType(Enum):
     CONTROLLER = 3
     BACKGROUND = 4
     REALTIME = 5
+    BROADCAST = 6
     
 
 class LogMessageType(Enum):
@@ -21,7 +22,7 @@ class Log:
     def __init__(self):
         self.logs = []
         tf = time.strftime('%Y-%m-%d_%H_%M_%S', time.localtime(time.time()))
-        self.logfile = open(f'./log/robot-log_{tf}.txt', 'w', encoding='utf-8')
+        self.logfile = None#open(f'./log/robot-log_{tf}.txt', 'w', encoding='utf-8')
         self.saveLogLine = 1000
     
     def i(self, logType: LogType, message: str):
@@ -36,8 +37,8 @@ class Log:
         self.logs.append(msg)
         t = time.strftime('[%Y/%m/%d %H:%M:%S]', time.localtime(time.time()))
         logmsg = f'{t} {logType.name}-{messageType.name} | {message}\n'
-        self.logfile.write(logmsg)
-        self.logfile.flush()
+        #self.logfile.write(logmsg)
+        #self.logfile.flush()
         print(logmsg, end='')
         if len(self.logs)>self.saveLogLine: self.logs = self.logs[1:]
     

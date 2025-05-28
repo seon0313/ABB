@@ -17,7 +17,7 @@ class Value:
 class Controller:
     def __init__(self, system: RobotSystem):
         self.__system: RobotSystem = system
-        self.__system.log.i(LogType.CONTROLLER, "Controller Load end")
+        self.__system.event.i(LogType.CONTROLLER, "Controller Load end")
         self.__handle: dict = None
         self.__system.event.addListener('controller', EventListener(self.__listener))
         self.__moveAngles: dict = {
@@ -32,12 +32,12 @@ class Controller:
         self.__handle = arg[0]
         if self.__handle.get('direction') in self.__moveAngles.keys():
             self.__moveAngles[self.__handle.get('direction')].value = self.__handle.get('value', 0)
-            self.__system.log.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
+            self.__system.event.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
     
     def run(self, event: threading.Event):
         while not event.is_set():
             if self.__handle:
-                self.__system.log.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
+                self.__system.event.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
                 self.__handle = None
 
 class ABBController(Controller):
