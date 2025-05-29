@@ -115,7 +115,7 @@ class Robot:
         self.system.event.i(LogType.BROADCAST, "Start Broadcast Thread")
         
 
-        self.__serverThread = mp.Process(target=self.__server.run, args=(self.system,))
+        self.__serverThread = mp.Process(target=self.__server.run)
 
         #self.__serverThread = mp.Process(target=self.server, daemon=True) a
         self.__serverThread.start()
