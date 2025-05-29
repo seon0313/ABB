@@ -115,11 +115,11 @@ class Robot:
         self.system.event.i(LogType.BROADCAST, "Start Broadcast Thread")
         
 
-        #self.__serverThread = mp.Process(target=self.__server.run, args=(self.system,))
+        self.__serverThread = mp.Process(target=self.__server.run, args=(self.system,))
 
         #self.__serverThread = mp.Process(target=self.server, daemon=True)
-        #self.__serverThread.start()
-        #self.system.log.i(LogType.ROBOT, "Start Server Thread")
+        self.__serverThread.start()
+        self.system.log.i(LogType.ROBOT, "Start Server Thread")
 
         #self.__aiThread = mp.Process(target=self.runAI, daemon=True)
         #self.__aiThread.start()
@@ -132,7 +132,7 @@ class Robot:
 
         self.__backgroundThread = mp.Process(target=self.background, daemon=True)
         self.__backgroundThread.start()
-        self.system.log.i(LogType.ROBOT, "Start Background Thread")
+        self.system.event.i(LogType.ROBOT, "Start Background Thread")
 
         #self.__controllerThread = mp.Process(target=self.controller, daemon=True)
         #self.__controllerThread.start()
