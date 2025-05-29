@@ -117,7 +117,7 @@ class Robot:
 
         self.__serverThread = mp.Process(target=self.__server.run, args=(self.system,))
 
-        #self.__serverThread = mp.Process(target=self.server, daemon=True)
+        #self.__serverThread = mp.Process(target=self.server, daemon=True) a
         self.__serverThread.start()
         self.system.log.i(LogType.ROBOT, "Start Server Thread")
 
