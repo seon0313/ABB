@@ -42,16 +42,15 @@ class Robot:
         self.system.event.addListener('log', EventListener(self.__logListener))
 
         self.__aiThread: mp.Process = None
-        self.__aiThreadEvent: mp.Event = mp.Event()
+        self.__aiThreadEvent = mp.Event()
         self.__serverThread: mp.Process = None
-        self.__serverThreadEvent: mp.Event = mp.Event()
+        self.__serverThreadEvent = mp.Event()
         self.__controllerThread: mp.Process = None
-        self.__controllerThreadEvent: mp.Event = mp.Event()
+        self.__controllerThreadEvent = mp.Event()
         self.__backgroundThread: mp.Process = None
-        self.__backgroundThreadEvent: mp.Event = mp.Event()
-        self.__realTimeThread: mp.Process = None
+        self.__backgroundThreadEvent = mp.Event()
         self.__broadcastServerThread: threading.Thread = None
-        self.__broadcastServerThreadEvent: threading.Thread = threading.Event()
+        self.__broadcastServerThreadEvent: threading.Event = threading.Event()
 
         self.system.event.i(LogType.ROBOT, "Load END")
     
@@ -69,8 +68,8 @@ class Robot:
         elif mt == LogMessageType.WARNING:
             self.__log.w(lt, me)
 
-    def server(self):
-        while not self.__aiThreadEvent.is_set(): pass
+    def runServer(self):
+        self.__server.run(self.__serverThreadEvent)
         self.__server.close()
         self.system.event.i(LogType.SERVER, "Server Thread Close")
 
@@ -97,7 +96,7 @@ class Robot:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.system.event.i(LogType.BROADCAST, "BroadCast On")
-        while True:
+        while not self.__broadcastServerThreadEvent.is_set():
             msg = {
                 'ip': '0.0.0.0',
                 'port': 8765,
@@ -115,15 +114,13 @@ class Robot:
         self.system.event.i(LogType.BROADCAST, "Start Broadcast Thread")
         
 
-        self.__serverThread = mp.Process(target=self.__server.run)
-
-        #self.__serverThread = mp.Process(target=self.server, daemon=True) a
+        self.__serverThread = mp.Process(target=self.runServer)
         self.__serverThread.start()
         self.system.event.i(LogType.ROBOT, "Start Server Thread")
 
-        #self.__aiThread = mp.Process(target=self.runAI, daemon=True)
-        #self.__aiThread.start()
-        #self.system.log.i(LogType.ROBOT, "Start AI Thread")
+        self.__aiThread = mp.Process(target=self.runAI, daemon=True)
+        self.__aiThread.start()
+        self.system.event.i(LogType.ROBOT, "Start AI Thread")
 
 
 
@@ -134,22 +131,25 @@ class Robot:
         self.__backgroundThread.start()
         self.system.event.i(LogType.ROBOT, "Start Background Thread")
 
-        #self.__controllerThread = mp.Process(target=self.controller, daemon=True)
-        #self.__controllerThread.start()
-        #self.system.log.i(LogType.CONTROLLER, "Start Controller Thread")
+        self.__controllerThread = mp.Process(target=self.controller, daemon=True)
+        self.__controllerThread.start()
+        self.system.event.i(LogType.CONTROLLER, "Start Controller Thread")
     def close(self):
-        self.__aiThreadEvent.set()
-        self.__serverThreadEvent.set()
-        self.__controllerThreadEvent.set()
-        self.__backgroundThreadEvent.set()
         self.__realTime.close()
+        self.system.event.sendEvent('server',{'type':'close'})
         self.__broadcastServerThreadEvent.set()
+        self.__serverThreadEvent.set()
+        self.__aiThreadEvent.set()
+        self.__backgroundThreadEvent.set()
+        self.__controllerThreadEvent.set()
 
+        self.__broadcastServerThread.join()
         self.__aiThread.join()
+        self.__serverThread.terminate()
         self.__serverThread.join()
         self.__controllerThread.join()
         self.__backgroundThread.join()
-        self.__realTimeThread.join()
+
         self.__broadcastServerThread.join()
         self.system.event.i(LogType.ROBOT, "Robot Off")
         self.system.event.close()
@@ -157,8 +157,6 @@ class Robot:
 if __name__ == '__main__':
     robot = Robot('ABB Type1', RobotType.ABB, '0.1 Alpha')
     robot.run()
-    try:
-        while True: pass
-    except KeyboardInterrupt:
-        pass
+    while True:
+        if input('if you want quit just press "Q" ').upper() == 'Q': break
     robot.close()

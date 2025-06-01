@@ -22,7 +22,7 @@ class Log:
     def __init__(self):
         self.logs = []
         tf = time.strftime('%Y-%m-%d_%H_%M_%S', time.localtime(time.time()))
-        self.logfile = None#open(f'./log/robot-log_{tf}.txt', 'w', encoding='utf-8')
+        self.logfile = open(f'./log/robot-log_{tf}.txt', 'w', encoding='utf-8')
         self.saveLogLine = 1000
     
     def i(self, logType: LogType, message: str):
