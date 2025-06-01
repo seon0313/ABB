@@ -58,7 +58,27 @@ class Server:
         _ip, _port = websocket.remote_address
         self.__system.event.i(LogType.SERVER,
                                 f"Connected New Client id: {client_id} | {_ip}:{_port}")
-        #try:
+        logined = False
+        while not self.event.is_set() and not logined:
+            msg = await websocket.recv()
+            msg: dict = json.loads(msg)
+            if msg.get('command') == 'login':
+                if msg.get('password') == self.__system.password:
+                    logined = True
+                    msg = {
+                        'command': 'login', 'data': 'pass'
+                    }
+                    await websocket.send(json.dumps(msg))
+                else:
+                    msg = {
+                        'command': 'login', 'data': 'need'
+                    }
+                    await websocket.send(json.dumps(msg))
+            else:
+                msg = {
+                    'command': 'login', 'data': 'need'
+                }
+                await websocket.send(json.dumps(msg))
         while not self.event.is_set():
             msg = await websocket.recv()
             msg = json.loads(msg)

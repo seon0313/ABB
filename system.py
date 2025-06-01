@@ -31,9 +31,10 @@ class Event:
         self.sendEvent('log', {'type': 'close'})
 
 class RobotSystem:
-    def __init__(self, event: Event, name='test', version='test', ip=''):
+    def __init__(self, event: Event, name='test', version='test', ip='', password: str='0000'):
         self.event: Event = event
         self.values: dict = {}
         self.name: str = name
         self.version: str = version
         self.ip: str = ip
+        self.password: str = password
