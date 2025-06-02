@@ -32,7 +32,7 @@ class Server:
     def __commandCamera(self, data: dict):
         self.__system.values['camera'] = data['data']
     def __commandCamera(self, data: dict):
-        return self.__system.values.get('camera')
+        return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
     
     def __commandMove(self, data: dict):
         self.__system.event.sendEvent('controller', data)
