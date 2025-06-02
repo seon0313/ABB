@@ -4,7 +4,7 @@ import json
 import base64
 import numpy as np
 import cv2
-from system import Event, EventListener, RobotSystem
+from system import EventListener, RobotSystem
 from log import LogType
 from multiprocessing import Event as mpEvent
 

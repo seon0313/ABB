@@ -1,7 +1,5 @@
-from enum import Enum, auto
+from enum import Enum
 import threading
-
-from numpy import real
 from server import Server
 from log import Log, LogMessageType, LogType
 from system import Event, EventListener, RobotSystem
@@ -156,5 +154,5 @@ if __name__ == '__main__':
     robot = Robot('ABB Type1', RobotType.ABB, '0.1 Alpha')
     robot.run()
     while True:
-        if input('if you want quit just press "Q"\n').upper() == 'Q': break
+        if input('if you want quit just press "Q"\n').upper()[-1] == 'Q': break
     robot.close()

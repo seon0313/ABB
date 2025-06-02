@@ -1,5 +1,4 @@
-from log import Log, LogType, LogMessageType
-from enum import Enum
+from log import LogType, LogMessageType
 
 class EventListener:
     def __init__(self, value=None):
