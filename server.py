@@ -24,8 +24,15 @@ class Server:
             'info': self.__commandInfo,
             'get_commands': self.__commandGetcmds,
             'move': self.__commandMove,
+            'camera': self.__commandCamera,
+            'camera_get': self.__commandCameraGet,
         }
         self.event = mpEvent()
+    
+    def __commandCamera(self, data: dict):
+        self.__system.values['camera'] = data['data']
+    def __commandCamera(self, data: dict):
+        return self.__system.values.get('camera')
     
     def __commandMove(self, data: dict):
         self.__system.event.sendEvent('controller', data)
