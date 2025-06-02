@@ -18,6 +18,13 @@
 |팀원|김재원|디자인 및 설계|
 |팀원|[조현수](https://github.com/johyunsu2mb)|디자인 및 설계|
 
+## 개발환경
+
+- OS: Arch Linux (Hyprland), ~~Windows 11~~
+- Python: 3.13.3
+
+> ABB는 Windows 시스템에서 동작하지 않습니다. 구동시 WSL2 또는 Linux, Unix, maxOS 환경에서 구동해주세요.
+
 ## 프로그램
 
 ABB는 추윤선의 독자 개발 시스템을 구동합니다.
