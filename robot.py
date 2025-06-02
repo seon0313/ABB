@@ -122,8 +122,6 @@ class Robot:
         self.__aiThread.start()
         self.system.event.i(LogType.ROBOT, "Start AI Thread")
 
-
-
         self.__realTime.connect()
         self.system.event.i(LogType.REALTIME, "Start RealTime")
 
@@ -158,5 +156,5 @@ if __name__ == '__main__':
     robot = Robot('ABB Type1', RobotType.ABB, '0.1 Alpha')
     robot.run()
     while True:
-        if input('if you want quit just press "Q" ').upper() == 'Q': break
+        if input('if you want quit just press "Q"\n').upper() == 'Q': break
     robot.close()
