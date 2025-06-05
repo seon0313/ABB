@@ -30,8 +30,10 @@ class Server:
         self.event = mpEvent()
     
     def __commandCamera(self, data: dict):
-        self.__system.values['camera'] = data['data']
-    def __commandCamera(self, data: dict):
+        self.__system.event.i(LogType.SERVER, "Get Camera Data")
+        self.__system.values['camera'] = self.__base64_to_image(data['data'].replace('data:image/png;base64,',''))
+        self.__system.event.i(LogType.SERVER, self.__system.values['camera'])
+    def __commandCameraGet(self, data: dict):
         return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
     
     def __commandMove(self, data: dict):
@@ -51,7 +53,6 @@ class Server:
         if type(arg[0]) == dict:
             if arg[0].get('type', '') == 'close':
                 self.close()
-        #print('server Listener - port: ', self.__port__, 'args: ', arg)
 
     def __base64_to_image(self, base64_string):
         img_data = base64.b64decode(base64_string)

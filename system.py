@@ -11,13 +11,16 @@ class Event:
         self.__l: dict[EventListener] = {}
     
     def sendEvent(self,name: str, value: any) -> bool:
-        eListner: EventListener = self.__l.get(name)
+        eListner: list = self.__l.get(name)
         if eListner:
-            eListner.getEvent(value)
+            for i in eListner:
+                i.getEvent(value)
             return True
         return False
     def addListener(self,name:str, listener: EventListener):
-        self.__l[name] = listener
+        if not self.__l.get(name, None):
+            self.__l[name] = [listener]
+        else: self.__l[name].append(listener)
     
     def i(self, logType: LogType, message: str):
         self.sendEvent('log', {'logType': logType, 'logMessageType': LogMessageType.NORMAL, 'message': message})

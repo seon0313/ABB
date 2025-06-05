@@ -5,7 +5,7 @@ from log import Log, LogMessageType, LogType
 from system import Event, EventListener, RobotSystem
 from RealTime import RealTime
 import time
-import random
+import cv2
 import socket
 from controller import Controller, ABBController
 import multiprocessing as mp
@@ -79,15 +79,16 @@ class Robot:
         self.system.event.i(LogType.CONTROLLER, "Controller Thread Close")
 
     def background(self):
+        def view(c):
+            print('!', flush=True)
+            cv2.imshow('get image', c[0])
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                    cv2.destroyAllWindows()
+        self.system.event.addListener('camera',
+                                      EventListener(view))
         while not self.__backgroundThreadEvent.is_set():
-            time.sleep(2)
-            self.system.values = {
-                'motor1': 180,
-                'random': random.randrange(0,1000),
-                'motor2': 280,
-                'input': 'Hello',
-            }
-            #self.system.event.sendEvent('controller', 'HelloWorld!')
+            self.system.event.sendEvent('server', '!')
+            time.sleep(1)
         self.system.event.i(LogType.BACKGROUND, "Background Thread Close")
     
     def broadcast(self):
@@ -120,8 +121,8 @@ class Robot:
         self.__aiThread.start()
         self.system.event.i(LogType.ROBOT, "Start AI Thread")
 
-        self.__realTime.connect()
-        self.system.event.i(LogType.REALTIME, "Start RealTime")
+        #self.__realTime.connect()
+        #self.system.event.i(LogType.REALTIME, "Start RealTime")
 
         self.__backgroundThread = mp.Process(target=self.background, daemon=True)
         self.__backgroundThread.start()
@@ -131,7 +132,7 @@ class Robot:
         self.__controllerThread.start()
         self.system.event.i(LogType.CONTROLLER, "Start Controller Thread")
     def close(self):
-        self.__realTime.close()
+        #self.__realTime.close()
         self.system.event.sendEvent('server',{'type':'close'})
         self.__broadcastServerThreadEvent.set()
         self.__serverThreadEvent.set()
