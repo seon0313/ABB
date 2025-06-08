@@ -2,7 +2,8 @@ from enum import Enum
 import threading
 from server import Server
 from log import Log, LogMessageType, LogType
-from system import Event, EventListener, RobotSystem
+from system import RobotSystem
+from event import Event, EventListener
 from RealTime import RealTime
 import time
 import cv2
@@ -24,10 +25,12 @@ class Robot:
         self.__log: Log = Log()
 
         self.system:RobotSystem = RobotSystem(
-            event= Event(),
             name=self.robot_name,
             version=self.robot_version
         )
+
+        self.__event: Event = Event(self.system)
+
         self.__server: Server = Server(self.system)
         with open('./key.txt', 'r') as f:
             OPENAI_API_KEY = f.readline()
@@ -87,7 +90,7 @@ class Robot:
         self.system.event.addListener('camera',
                                       EventListener(view))
         while not self.__backgroundThreadEvent.is_set():
-            self.system.event.sendEvent('server', '!')
+            #self.system.event.sendEvent('server', '!')
             time.sleep(1)
         self.system.event.i(LogType.BACKGROUND, "Background Thread Close")
     
@@ -112,6 +115,7 @@ class Robot:
         self.__broadcastServerThread.start()
         self.system.event.i(LogType.BROADCAST, "Start Broadcast Thread")
         
+        self.__event.run()
 
         self.__serverThread = mp.Process(target=self.runServer)
         self.__serverThread.start()
@@ -133,7 +137,8 @@ class Robot:
         self.system.event.i(LogType.CONTROLLER, "Start Controller Thread")
     def close(self):
         #self.__realTime.close()
-        self.system.event.sendEvent('server',{'type':'close'})
+        self.__event.close()
+        self.system.event.sendEvent('server', {'type':'close'})
         self.__broadcastServerThreadEvent.set()
         self.__serverThreadEvent.set()
         self.__aiThreadEvent.set()

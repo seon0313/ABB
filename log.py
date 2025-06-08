@@ -1,5 +1,6 @@
 from enum import Enum
 import time
+import socket
 
 class LogType(Enum):
     ALL = -1
@@ -10,6 +11,13 @@ class LogType(Enum):
     BACKGROUND = 4
     REALTIME = 5
     BROADCAST = 6
+    EVENT = 7
+    def getLogType(val: int):
+        _map = LogType._member_map_.values()
+        for i in _map:
+            if i.value == val:
+                return i
+        return None
     
 
 class LogMessageType(Enum):
@@ -17,6 +25,21 @@ class LogMessageType(Enum):
     ERROR = 1
     WARNING = 2
     ALL = -1
+    def getLogMessageType(val: int):
+        _map = LogMessageType._member_map_.values()
+        for i in _map:
+            if i.value == val:
+                return i
+        return None
+
+class LogServer:
+    def __init__(self, ip='0.0.0.0', port=8267):
+        self.__log: Log = Log()
+        self.__server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.run_: bool = True
+    
+    def run():
+        pass
 
 class Log:
     def __init__(self):

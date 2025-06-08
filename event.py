@@ -1,5 +1,6 @@
 import json, socket, threading
 from system import RobotSystem
+from log import LogType, LogMessageType, Log
 
 class Event:
     def __init__(self,system: RobotSystem, ip='0.0.0.0', port=7564):
@@ -10,12 +11,41 @@ class Event:
         self.__threadEvent: threading.Event = threading.Event()
         self.buff: int = 1024
         self.__clients: dict[socket.socket] = {}
+        self.__system = system
+        self.__log = Log()
     
     def __client(self, client: socket.socket, addr,id:str):
         if not self.__clients.get(id, None): self.__clients[id] = [client]
         else: self.__clients[id].append(client)
         while not self.__threadEvent.is_set():
-            data = 
+            try:
+                data = bytearray()
+                while True:
+                    packet = client.recv(1024)
+                    if not packet: break
+                    data.extend(packet)
+                data: dict = json.loads(data.decode('utf8'))
+
+                type_ = data.get('type', '')
+
+                if type_ == 'send':
+                    id_ = data.get('target', None)
+                    if id_:
+                        msg = json.dumps(data).encode('utf8')
+                        for i in self.__clients.get(id_, []):
+                            i.sendall(msg)
+                elif type_ == 'log':
+                    logType = LogType.getLogType(data.get('logType'))
+                    if logType:
+                        messageType = LogMessageType.getLogMessageType(data.get('message'))
+                        if messageType:
+                            message = data.get('message', '')
+                            self.__log.addLog(logType, messageType, message)
+
+            except Exception as e:
+                self.__system.event.e(LogType.EVENT, f"Client Error {addr}:\t{e}")
+            self.__clients[id].remove(client)
+            self.__system.event.i(LogType.EVENT, f'Client Close {addr}')
 
     def __run(self):
         self.__server.bind((self.__ip, self.__port))
@@ -35,5 +65,5 @@ class Event:
         self.__thread.join()
 
 class EventListener:
-    def __init__(self):
+    def __init__(self, ip='0.0.0.0', port=7564):
         pass

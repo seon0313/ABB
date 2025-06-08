@@ -38,6 +38,7 @@ ABB는 추윤선의 독자 개발 시스템을 구동합니다.
 |`server.py`|Websocket 서버. `robot.py`의 통제를 받는다. 외부 프로그램과 소통을 위한 기능|
 |`system.py`|`Event`, `EventListener`, `RobotSystem`등 로봇 시스템 관련 코드|
 |`controller.py`|로봇의 움직임 제어 프로그램|
+|`event.py`|Socket 기반 Event|
 
 아래는 ABB의 시스템 작동 구조도 입니다.
 
@@ -65,6 +66,11 @@ Robot
 `onclick_install.py`를 실행하여 실행에 필요한 모듈을 한번에 설치할 수 있습니다.
 
 프로그램을 실행후 필수 모듈을 설치해 주세요.
+
+컨트롤러 통신, 프로세스 통신에 필요한 포트를 사용하지 말아주세요.
+* `8765`: *Websocket*
+* `7564`: *Event*
+* `8267`: *Log*
 
 `Unity` 프로그램을 설치하지 않았을 시 `/Debug`에서 `app.py`를 실행하여 서버에 접속할수 있는 웹프로그램을 실행할수 있습니다. 인터넷 브라우저에서 접속후 사용하세요. `port = 9181`
 (필수 기능만 사용가능)
