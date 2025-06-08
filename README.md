@@ -57,6 +57,8 @@ Robot
 
 위 하위 클래스들은 `Event`와 `EventListener`를 이용하여 서로 소통합니다.
 
+`Event`와 `EventListener`는 `socket`을 이용하여 소통합니다. `Event`는 같은 일시에 들어온 두개의 데이터를 구분해 처리할 수 있으며 3개 이상은 처리하지 않습니다.
+
 각 하위 노드들은 별개의 Thread에서 동작합니다.
 
 `RobotSystem`클래스에서 로봇의 Event, Log시스템, 변수를 저장하고 관리합니다.
