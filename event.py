@@ -3,7 +3,7 @@ from system import RobotSystem
 from log import LogType, LogMessageType, Log
 
 class Event:
-    def __init__(self,system: RobotSystem, ip='0.0.0.0', port=7564):
+    def __init__(self,system: RobotSystem, log: Log, ip='0.0.0.0', port=7564):
         self.__ip = ip
         self.__port = port
         self.__server: socket.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -12,7 +12,7 @@ class Event:
         self.buff: int = 1024
         self.__clients: dict[socket.socket] = {}
         self.__system = system
-        self.__log = Log()
+        self.__log = log
     
     def __client(self, client: socket.socket, addr,id:str):
         if not self.__clients.get(id, None): self.__clients[id] = [client]
