@@ -65,5 +65,45 @@ class Event:
         self.__thread.join()
 
 class EventListener:
-    def __init__(self, ip='0.0.0.0', port=7564):
-        pass
+    def __init__(self, func: any, ip='0.0.0.0', port=7564):
+        self.__ip = ip
+        self.__port = port
+        self.__client: socket.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.__thread: threading.Thread = threading.Thread(target=self.__run, daemon=True)
+        self.__threadEvent: threading.Event = threading.Event()
+        self.__has_connect: bool = False
+        self.func = func
+
+    def sendLog(self, logType: LogType, messageType: LogMessageType, message: str):
+        msg = {
+            'type': 'log',
+            'logType': logType.value,
+            'messageType': messageType.value,
+            'message': message
+        }
+        self.__client.send(json.dumps(msg).encode('utf8'))
+
+    def i(self, logType: LogType, message: str):
+        self.sendLog(logType, LogMessageType.NORMAL, message)
+    def e(self, logType: LogType, message: str):
+        self.sendLog(logType, LogMessageType.ERROR, message)
+    def w(self, logType: LogType, message: str):
+        self.sendLog(logType, LogMessageType.WARNING, message)
+
+    def __listener(self):
+        while not self.__has_connect and not self.__threadEvent.is_set(): pass
+
+        while not self.__threadEvent.is_set():
+            data = bytearray()
+            while True:
+                packet = self.__client.recv(1024)
+                if not packet: break
+                data.extend(packet)
+            data: dict = json.dumps(data.decode('utf8'))
+            self.func(data)
+
+    def run(self):
+        self.__client.connect((self.ip, self.__port))
+        self.__has_connect = True
+        self.__thread = threading.Thread(self.__listener, daemon=True)
+        self.__thread.start()
