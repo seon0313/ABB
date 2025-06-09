@@ -67,13 +67,6 @@ class Robot:
         self.__log.i(LogType.CONTROLLER, "Controller Thread Close")
 
     def background(self):
-        #def view(c):
-        #    print('!', flush=True)
-        #    cv2.imshow('get image', c[0])
-        #    if cv2.waitKey(1) & 0xFF == ord('q'):
-        #            cv2.destroyAllWindows()
-        #self.system.event.addListener('camera',
-        #                              EventListener(view))
         self.__Listener.run()
         count = 0
         while not self.__backgroundThreadEvent.is_set():
@@ -142,7 +135,8 @@ class Robot:
         self.__log.i(LogType.ROBOT, "Server Close")
         self.__aiThread.join()
         self.__log.i(LogType.ROBOT, "AI Thread Close")
-        self.__controllerThread.join()
+        self.__controllerThread.join(10)
+        self.__controllerThread.terminate()
         self.__log.i(LogType.ROBOT, "Controller Close")
         self.__backgroundThread.join()
         self.__log.i(LogType.ROBOT, "Background Close")

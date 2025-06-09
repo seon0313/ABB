@@ -24,7 +24,7 @@ class Event:
         id_ = name
         if id_:
             msg = json.dumps(msg).encode('utf8')
-            for i in self.__clients.get(id_, []):
+            for i in tuple(self.__clients.get(id_, [])):
                 i.sendall(msg)
     
     def __client(self, client: socket.socket, addr):
@@ -59,7 +59,7 @@ class Event:
                     id_ = data.get('target', None)
                     if id_:
                         msg = json.dumps(data.get('value', '')).encode('utf8')
-                        for i in self.__clients.get(id_, []):
+                        for i in tuple(self.__clients.get(id_, [])):
                             i.sendall(msg)
                 if type_ == 'log':
                     logType = LogType.getLogType(data.get('logType'))
@@ -98,6 +98,7 @@ class EventListener:
         self.name = name
         self.__port = port
         self.__client: socket.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.__client.settimeout(10)
         self.__thread: threading.Thread = None
         self.__threadEvent: threading.Event = threading.Event()
         self.__has_connect: bool = False
@@ -146,4 +147,5 @@ class EventListener:
         self.__thread.start()
     
     def close(self):
+        self.__threadEvent.is_set()
         self.__client.close()

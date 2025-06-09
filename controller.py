@@ -2,7 +2,7 @@ from system import RobotSystem
 from event import EventListener
 from log import Log, LogType
 import threading
-import time
+import multiprocessing as mp
 from enum import Enum
 
 class ValueType(Enum):
@@ -34,7 +34,7 @@ class Controller:
             self.__moveAngles[self.__handle.get('direction')].value = self.__handle.get('value', 0)
             self.eventListener.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
     
-    def run(self, event: threading.Event):
+    def run(self, event):
         self.eventListener.run()
         while not event.is_set():
             if self.__handle:
