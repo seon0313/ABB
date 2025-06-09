@@ -36,8 +36,11 @@ class Event:
 
         overflow: str = ''
 
+        client.settimeout(10)
+
         while not self.__threadEvent.is_set():
             try:
+                if self.__threadEvent.is_set(): break
                 if overflow != '' and overflow[-1] == '\0': 
                     data = overflow.split('\0')
                     overflow = ''
@@ -68,6 +71,7 @@ class Event:
 
             except Exception as e:
                 self.__log.e(LogType.EVENT, f"Client Error {addr}:\t{e}")
+        client.close()
         self.__clients[id].remove(client)
         self.__log.i(LogType.EVENT, f'Client Close {addr}')
 
@@ -87,7 +91,6 @@ class Event:
         self.__threadEvent.set()
         self.isOpend = False
         self.__server.close()
-        self.__thread.join()
 
 class EventListener:
     def __init__(self, name: str, func: any, ip='127.0.0.1', port=7564):

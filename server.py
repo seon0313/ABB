@@ -36,7 +36,7 @@ class Server:
         return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
     
     def __commandMove(self, data: dict):
-        self.__system.event.sendEvent('controller', data)
+        self.eventLstener.sendEvent('controller', data)
     
     def __commandInfo(self, data: dict):
         return {'command':data['command'], 'name': self.__system.name, 'version': self.__system.version}

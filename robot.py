@@ -129,7 +129,6 @@ class Robot:
     def close(self):
         self.__realTime.close()
         self.__event.sendEvent('server', {'type':'close'})
-        self.__event.close()
         self.__broadcastServerThreadEvent.set()
         self.__serverThreadEvent.set()
         self.__aiThreadEvent.set()
@@ -137,13 +136,18 @@ class Robot:
         self.__controllerThreadEvent.set()
 
         self.__broadcastServerThread.join()
+        self.__log.i(LogType.ROBOT, "BroadcastServer Close")
         self.__serverThread.terminate()
         self.__serverThread.join()
+        self.__log.i(LogType.ROBOT, "Server Close")
         self.__aiThread.join()
+        self.__log.i(LogType.ROBOT, "AI Thread Close")
         self.__controllerThread.join()
+        self.__log.i(LogType.ROBOT, "Controller Close")
         self.__backgroundThread.join()
-
-        self.__broadcastServerThread.join()
+        self.__log.i(LogType.ROBOT, "Background Close")
+        self.__event.close()
+        self.__log.i(LogType.ROBOT, "Event Close")
         self.__log.i(LogType.ROBOT, "Robot Off")
         self.__log.close()
 
