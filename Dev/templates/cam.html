@@ -73,7 +73,7 @@
             
             const imageData = canvas.toDataURL('image/png');
             console.log(imageData);
-            document.getElementById("123").textContent = imageData;
+            // document.getElementById("123").textContent = imageData;
             socket.send("{\"command\":\"camera\", \"data\":\""+imageData+"\"}");
             setTimeout(function () {sendCamera()}, 10);
         }

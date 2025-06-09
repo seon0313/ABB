@@ -24,14 +24,13 @@ class Server:
             'get_commands': self.__commandGetcmds,
             'move': self.__commandMove,
             'camera': self.__commandCamera,
-            'camera_get': self.__commandCameraGet,
+            'get_camera': self.__commandCameraGet,
         }
         self.event = mpEvent()
     
     def __commandCamera(self, data: dict):
         self.eventLstener.i(LogType.SERVER, "Get Camera Data")
-        self.__system.values['camera'] = self.__base64_to_image(data['data'].replace('data:image/png;base64,',''))
-        self.eventLstener.i(LogType.SERVER, self.__system.values['camera'])
+        self.__system.values['camera'] = data['data'].replace('data:image/png;base64,','')
     def __commandCameraGet(self, data: dict):
         return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
     
