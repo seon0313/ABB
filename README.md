@@ -57,11 +57,26 @@ Robot
 
 위 하위 클래스들은 `Event`와 `EventListener`를 이용하여 서로 소통합니다.
 
-`Event`와 `EventListener`는 `socket`을 이용하여 소통합니다. `Event`는 같은 일시에 들어온 두개의 데이터를 구분해 처리할 수 있으며 3개 이상은 처리하지 않습니다.
+`Event`와 `EventListener`는 `socket`을 이용하여 소통합니다. `Event`는 같은 일시에 들어온 데이터를 구분해 처리할 수 있으며 3개 이상은 처리하지 않습니다.
 
-각 하위 노드들은 별개의 Thread에서 동작합니다.
+각 하위 클래스들은 별개의 Process에서 동작합니다.
 
-`RobotSystem`클래스에서 로봇의 Event, Log시스템, 변수를 저장하고 관리합니다.
+`RobotSystem`클래스에서 로봇의 정보, 변수를 저장하고 관리합니다.
+로봇의 변수는 `dict`로 관리되며 카메라 데이터, arucoMarker 처리 데이터, a* 데이터 같은 데이터가 저장됩니다.
+
+<details>
+<summary>RobotSystem의 고유 변수 목록</summary>
+
+---
+
+| 변수명 | 용도 |
+| --- | --- |
+| camera | 탑 뷰 카메라, 맵 리딩에 사용된다. |
+| camera_marker | arucoMarker를 그린 이미지 또는 arucoMarker의 위치 데이터 |
+| camera_astar | a* 알고리즘을 이용해 루트를 그리고 루트 데이터 |
+
+</details>
+
 
 ## 가이드
 
