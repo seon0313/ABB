@@ -31,13 +31,13 @@ class Robot:
 
         self.__event: Event = Event(self.system, self.__log)
 
-        #self.__server: Server = Server(self.system)
+        self.__server: Server = Server(self.system)
         with open('./key.txt', 'r') as f:
             OPENAI_API_KEY = f.readline()
             f.close()
         self.__realTime: RealTime = RealTime(OPENAI_API_KEY)
 
-        #self.__controller: Controller = ABBController(self.system)
+        self.__controller: Controller = ABBController(self.system)
 
         self.__aiThread: mp.Process = None
         self.__aiThreadEvent = mp.Event()
@@ -50,7 +50,7 @@ class Robot:
         self.__broadcastServerThread: threading.Thread = None
         self.__broadcastServerThreadEvent: threading.Event = threading.Event()
 
-        self.__Listener = EventListener('test',lambda x: self.__log.i(LogType.EVENT, f'I get Event {x}'))
+        self.__Listener = EventListener('test', lambda x: self.__log.i(LogType.EVENT, f'I get Event {x}'))
 
         self.__log.i(LogType.ROBOT, "Load END")
 
@@ -60,11 +60,11 @@ class Robot:
         self.__log.i(LogType.SERVER, "Server Thread Close")
 
     def runAI(self):
-        self.__log.event.i(LogType.AI, "AI Thread Close")
+        self.__log.i(LogType.AI, "AI Thread Close")
 
     def controller(self):
         self.__controller.run(self.__controllerThreadEvent)
-        self.__log.event.i(LogType.CONTROLLER, "Controller Thread Close")
+        self.__log.i(LogType.CONTROLLER, "Controller Thread Close")
 
     def background(self):
         #def view(c):
@@ -81,6 +81,7 @@ class Robot:
             self.__Listener.i(LogType.BACKGROUND, f'send {count}')
             count+=1
             time.sleep(1)
+        self.__Listener.close()
         self.__log.i(LogType.BACKGROUND, "Background Thread Close")
     
     def broadcast(self):
@@ -89,7 +90,7 @@ class Robot:
         self.__log.i(LogType.BROADCAST, "BroadCast On")
         while not self.__broadcastServerThreadEvent.is_set():
             msg = {
-                'ip': '0.0.0.0',
+                'ip': socket.gethostbyname(socket.gethostname()),
                 'port': 8765,
                 'name': self.system.name,
                 'version': self.system.version
@@ -100,50 +101,51 @@ class Robot:
         self.__log.i(LogType.BROADCAST, "Broadcast Thread Close")
 
     def run(self):
-        #self.__broadcastServerThread = threading.Thread(target=self.broadcast, daemon=True)
-        #self.__broadcastServerThread.start()
-        #self.__log.i(LogType.BROADCAST, "Start Broadcast Thread")
-        
         self.__event.run()
+        while not self.__event.isOpend: pass
+        
+        self.__broadcastServerThread = threading.Thread(target=self.broadcast, daemon=True)
+        self.__broadcastServerThread.start()
+        self.__log.i(LogType.BROADCAST, "Start Broadcast Thread")
 
-        #self.__serverThread = mp.Process(target=self.runServer)
-        #self.__serverThread.start()
-        #self.__log.i(LogType.ROBOT, "Start Server Thread")
+        self.__serverThread = mp.Process(target=self.runServer)
+        self.__serverThread.start()
+        self.__log.i(LogType.ROBOT, "Start Server Thread")
 
-        #self.__aiThread = mp.Process(target=self.runAI, daemon=True)
-        #self.__aiThread.start()
-        #self.__log.i(LogType.ROBOT, "Start AI Thread")
+        self.__aiThread = mp.Process(target=self.runAI, daemon=True)
+        self.__aiThread.start()
+        self.__log.i(LogType.ROBOT, "Start AI Thread")
 
-        #self.__realTime.connect()
-        #self.system.event.i(LogType.REALTIME, "Start RealTime")
+        self.__realTime.connect()
+        self.__log.i(LogType.REALTIME, "Start RealTime")
 
         self.__backgroundThread = mp.Process(target=self.background, daemon=True)
         self.__backgroundThread.start()
         self.__log.i(LogType.ROBOT, "Start Background Thread")
 
-        #self.__controllerThread = mp.Process(target=self.controller, daemon=True)
-        #self.__controllerThread.start()
-        #self.__log.i(LogType.CONTROLLER, "Start Controller Thread")
+        self.__controllerThread = mp.Process(target=self.controller, daemon=True)
+        self.__controllerThread.start()
+        self.__log.i(LogType.CONTROLLER, "Start Controller Thread")
     def close(self):
-        #self.__realTime.close()
+        self.__realTime.close()
+        self.__event.sendEvent('server', {'type':'close'})
         self.__event.close()
-        #self.__log.sendEvent('server', {'type':'close'})
-        #self.__broadcastServerThreadEvent.set()
-        #self.__serverThreadEvent.set()
-        #self.__aiThreadEvent.set()
+        self.__broadcastServerThreadEvent.set()
+        self.__serverThreadEvent.set()
+        self.__aiThreadEvent.set()
         self.__backgroundThreadEvent.set()
-        #self.__controllerThreadEvent.set()
+        self.__controllerThreadEvent.set()
 
-        #self.__broadcastServerThread.join()
-        #self.__serverThread.terminate()
-        #self.__serverThread.join()
-        #self.__aiThread.join()
-        #self.__controllerThread.join()
-        #self.__backgroundThread.join()
+        self.__broadcastServerThread.join()
+        self.__serverThread.terminate()
+        self.__serverThread.join()
+        self.__aiThread.join()
+        self.__controllerThread.join()
+        self.__backgroundThread.join()
 
-        #self.__broadcastServerThread.join()
-        #self.__log.i(LogType.ROBOT, "Robot Off")
-        #self.__log.close()
+        self.__broadcastServerThread.join()
+        self.__log.i(LogType.ROBOT, "Robot Off")
+        self.__log.close()
 
 if __name__ == '__main__':
     robot = Robot('ABB Type1', RobotType.ABB, '0.1 Alpha')

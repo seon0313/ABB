@@ -4,7 +4,8 @@ import json
 import base64
 import numpy as np
 import cv2
-from system import EventListener, RobotSystem
+from system import RobotSystem
+from event import EventListener
 from log import LogType
 from multiprocessing import Event as mpEvent
 
@@ -15,9 +16,7 @@ class Server:
         self.__server: websockets.serve = None
 
         self.__system = system
-        self.el = EventListener(self.__listener)
-        self.__system.event.addListener('server', self.el)
-        self.__system.event.i(LogType.SERVER, "Server Load END")
+        self.eventLstener = EventListener("server", self.__listener)
 
         self.__commands: dict = {
             'get': self.__commandGet,
@@ -30,9 +29,9 @@ class Server:
         self.event = mpEvent()
     
     def __commandCamera(self, data: dict):
-        self.__system.event.i(LogType.SERVER, "Get Camera Data")
+        self.eventLstener.i(LogType.SERVER, "Get Camera Data")
         self.__system.values['camera'] = self.__base64_to_image(data['data'].replace('data:image/png;base64,',''))
-        self.__system.event.i(LogType.SERVER, self.__system.values['camera'])
+        self.eventLstener.i(LogType.SERVER, self.__system.values['camera'])
     def __commandCameraGet(self, data: dict):
         return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
     
@@ -43,13 +42,13 @@ class Server:
         return {'command':data['command'], 'name': self.__system.name, 'version': self.__system.version}
     
     def __commandGet(self, data: dict):
-        self.__system.event.w(LogType.SERVER, f"{self.__system.values}")
+        self.eventLstener.w(LogType.SERVER, f"{self.__system.values}")
         return self.__system.values
     def __commandGetcmds(self, data: dict):
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
 
     def __listener(self, *arg):
-        self.__system.event.i(LogType.SERVER, f"change value: {self.__system.values}")
+        self.eventLstener.i(LogType.SERVER, f"change value: {self.__system.values}")
         if type(arg[0]) == dict:
             if arg[0].get('type', '') == 'close':
                 self.close()
@@ -64,7 +63,7 @@ class Server:
         #try:
         client_id = id(websocket)
         _ip, _port = websocket.remote_address
-        self.__system.event.i(LogType.SERVER,
+        self.eventLstener.i(LogType.SERVER,
                                 f"Connected New Client id: {client_id} | {_ip}:{_port}")
         logined = False
         while not self.event.is_set() and not logined:
@@ -96,25 +95,26 @@ class Server:
                 if value: await websocket.send(json.dumps(value))
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER, f'Error CLient id: {client_id} | {e}')
-        self.__system.event.i(LogType.SERVER,
+        self.eventLstener.i(LogType.SERVER,
                                 f"Disconnected Client id: {client_id} | {_ip}:{_port}")
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER,f"Client Error {e}")
     async def __start_server(self):
         try:
-            self.__system.event.i(LogType.SERVER, "Opening Server...")
+            self.eventLstener.i(LogType.SERVER, "Opening Server...")
             #loop = asyncio.new_event_loop()
             #asyncio.set_event_loop(loop)
             self.__server = await websockets.serve(self.__client, self.__host, self.__port)
-            self.__system.event.i(LogType.SERVER, "Server Opened")
+            self.eventLstener.i(LogType.SERVER, "Server Opened")
             await self.__server.wait_closed()
         except Exception as e:
-            self.__system.event.e(LogType.SERVER,
+            self.eventLstener.e(LogType.SERVER,
                                   f"Start Error - {e}")
     def close(self):
         if self.__server:
             self.__server.close()
-        self.__system.event.i(LogType.SERVER, "Server Close")
+        self.eventLstener.i(LogType.SERVER, "Server Close")
     def run(self, event):
+        self.eventLstener.run()
         self.event = event
         asyncio.run(self.__start_server())

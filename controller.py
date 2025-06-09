@@ -1,4 +1,5 @@
-from system import RobotSystem, Event, EventListener
+from system import RobotSystem
+from event import EventListener
 from log import Log, LogType
 import threading
 import time
@@ -17,9 +18,7 @@ class Value:
 class Controller:
     def __init__(self, system: RobotSystem):
         self.__system: RobotSystem = system
-        self.__system.event.i(LogType.CONTROLLER, "Controller Load end")
         self.__handle: dict = None
-        self.__system.event.addListener('controller', EventListener(self.__listener))
         self.__moveAngles: dict = {
             'front': Value(ValueType.RANGE, 0),
             'back': Value(ValueType.RANGE, 0),
@@ -27,18 +26,21 @@ class Controller:
             'right': Value(ValueType.RANGE, 0),
             'rocate': Value(ValueType.VALUE, 0),
             }
+        self.eventListener: EventListener = EventListener('controller', self.__listener)
     
     def __listener(self, *arg):
         self.__handle = arg[0]
         if self.__handle.get('direction') in self.__moveAngles.keys():
             self.__moveAngles[self.__handle.get('direction')].value = self.__handle.get('value', 0)
-            self.__system.event.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
+            self.eventListener.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
     
     def run(self, event: threading.Event):
+        self.eventListener.run()
         while not event.is_set():
             if self.__handle:
-                self.__system.event.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
+                self.eventListener.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
                 self.__handle = None
+        self.eventListener.close()
 
 class ABBController(Controller):
     def __init__(self, system: RobotSystem):
