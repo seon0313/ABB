@@ -67,14 +67,14 @@ class Robot:
         self.__log.i(LogType.CONTROLLER, "Controller Thread Close")
 
     def background(self):
-        self.__Listener.run()
-        count = 0
-        while not self.__backgroundThreadEvent.is_set():
-            self.__Listener.sendEvent('test', f'{count}')
-            self.__Listener.i(LogType.BACKGROUND, f'send {count}')
-            count+=1
-            time.sleep(1)
-        self.__Listener.close()
+        #self.__Listener.run()
+        #count = 0
+        #while not self.__backgroundThreadEvent.is_set():
+        #    self.__Listener.sendEvent('test', f'{count}')
+        #    self.__Listener.i(LogType.BACKGROUND, f'send {count}')
+        #    count+=1
+        #    time.sleep(1)
+        #self.__Listener.close()
         self.__log.i(LogType.BACKGROUND, "Background Thread Close")
     
     def broadcast(self):

@@ -1,8 +1,6 @@
 from system import RobotSystem
 from event import EventListener
-from log import Log, LogType
-import threading
-import multiprocessing as mp
+from log import LogType
 from enum import Enum
 
 class ValueType(Enum):

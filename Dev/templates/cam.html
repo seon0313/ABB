@@ -33,7 +33,7 @@
             }
         }
         startCamera();
-        const socket = new WebSocket('ws://localhost:8765');
+        const socket = new WebSocket('ws://172.30.5.97:8765');
         socket.addEventListener("open", () => {
             console.log("connected");
             socket.send("{\"command\":\"login\", \"password\":\"0000\"}");
@@ -75,7 +75,7 @@
             console.log(imageData);
             // document.getElementById("123").textContent = imageData;
             socket.send("{\"command\":\"camera\", \"data\":\""+imageData+"\"}");
-            setTimeout(function () {sendCamera()}, 10);
+            setTimeout(function () {sendCamera()}, 1000/30);
         }
 
         setTimeout(function () {sendCamera()},10000);
