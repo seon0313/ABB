@@ -1,6 +1,7 @@
 import json, socket, threading
 from system import RobotSystem
 from log import LogType, LogMessageType, Log
+import struct
 
 class Event:
     def __init__(self,system: RobotSystem, log: Log, ip='0.0.0.0', port=7564):
@@ -15,6 +16,9 @@ class Event:
         self.__system = system
         self.__log = log
         self.isOpend: bool = False
+
+        self.__oldversion: bool = False
+    
     def sendEvent(self, name: str, value: any):
         msg = {
             'type': 'send',
@@ -25,8 +29,32 @@ class Event:
         if id_:
             msg = json.dumps(msg).encode('utf8')
             for i in tuple(self.__clients.get(id_, [])):
-                i.sendall(msg)
+                self.__send(msg,c=i)
     
+    def __send(self, data, c:socket.socket=None):
+        s = self.__server if not c else c
+
+        if self.__oldversion:
+            s.sendall(s)
+            return
+        s.sendall(struct.pack('>Q', len(data)))
+        s.sendall(data)
+
+    def __read(self, c=socket.socket) -> str:
+        if self.__oldversion:
+            return c.recv(4096).decode('utf8')
+        bs = c.recv(8)
+        (length,) = struct.unpack('>Q', bs)
+        data = b''
+        print('read',length, len(data), flush=True)
+        while len(data) < length:
+            to_read = length - len(data)
+            data += c.recv(
+                4096 if to_read > 4096 else to_read)
+        
+        data = data.decode('utf8')
+        return data
+
     def __client(self, client: socket.socket, addr):
         id = client.recv(1024).decode('utf8')
         client.sendall('end'.encode('utf8'))
@@ -45,7 +73,7 @@ class Event:
                     data = overflow.split('\0')
                     overflow = ''
                 else:
-                    data = str(overflow+(client.recv(4096).decode('utf8'))).split('\0')
+                    data = str(overflow+(self.__read(client))).split('\0')
                     if len(data)>1:
                         overflow = data[1]
                         if len(data) >= 3: overflow += '\0'
@@ -60,7 +88,7 @@ class Event:
                     if id_:
                         msg = json.dumps(data.get('value', '')).encode('utf8')
                         for i in tuple(self.__clients.get(id_, [])):
-                            i.sendall(msg)
+                            self.__send(msg,c=i)
                 if type_ == 'log':
                     logType = LogType.getLogType(data.get('logType'))
                     if logType:
@@ -70,7 +98,7 @@ class Event:
                             self.__log.addLog(logType, messageType, message)
 
             except Exception as e:
-                self.__log.e(LogType.EVENT, f"Client Error {addr}:\t{e}")
+                self.__log.e(LogType.EVENT, f"Client Error id={id} {addr}:\t{e}")
         client.close()
         self.__clients[id].remove(client)
         self.__log.i(LogType.EVENT, f'Client Close {addr}')
@@ -103,6 +131,22 @@ class EventListener:
         self.__threadEvent: threading.Event = threading.Event()
         self.__has_connect: bool = False
         self.func = func
+    
+    def __send(self, data, c:socket.socket=None):
+        s = self.__client if not c else c
+        s.sendall(struct.pack('>Q', len(data)))
+        s.sendall(data)
+    def __read(self, c=socket.socket) -> str:
+        bs = c.recv(8)
+        (length,) = struct.unpack('>Q', bs)
+        data = b''
+        while len(data) < length:
+            to_read = length - len(data)
+            data += c.recv(
+                4096 if to_read > 4096 else to_read)
+        
+        data = data.decode('utf8')
+        return data
 
     def sendEvent(self, name: str, value: any):
         msg = {
@@ -110,7 +154,7 @@ class EventListener:
             'target': name,
             'value': value
         }
-        self.__client.sendall(str(json.dumps(msg)+'\0').encode('utf8'))
+        self.__send(str(json.dumps(msg)+'\0').encode('utf8'))
 
     def sendLog(self, logType: LogType, messageType: LogMessageType, message: str):
         msg = {
@@ -119,7 +163,7 @@ class EventListener:
             'messageType': messageType.value,
             'message': message
         }
-        self.__client.send(str(json.dumps(msg)+'\0').encode('utf8'))
+        self.__send(str(json.dumps(msg)+'\0').encode('utf8'))
 
     def i(self, logType: LogType, message: str):
         self.sendLog(logType, LogMessageType.NORMAL, message)
@@ -134,7 +178,7 @@ class EventListener:
         while not self.__threadEvent.is_set():
             try:
                 data = self.__client.recv(4096)
-                data: dict = json.loads(data.decode('utf8'))
+                data: dict = json.loads(self.__read(self.__client))
                 self.func(data)
             except Exception as e: self.sendLog(LogType.EVENT, LogMessageType.ERROR, f'L:\t{e}')
 

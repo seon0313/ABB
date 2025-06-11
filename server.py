@@ -25,14 +25,21 @@ class Server:
             'move': self.__commandMove,
             'camera': self.__commandCamera,
             'get_camera': self.__commandCameraGet,
+            'touch': self.__commandTouch,
         }
         self.event = mpEvent()
     
+    def __commandTouch(self, data):
+        self.eventLstener.sendEvent('ai', data)
+    
     def __commandCamera(self, data: dict):
-        self.eventLstener.i(LogType.SERVER, "Get Camera Data")
+        #self.eventLstener.i(LogType.SERVER, "Get Camera Data")
         self.__system.values['camera'] = data['data'].replace('data:image/png;base64,','')
+        #self.eventLstener.i(LogType.SERVER, str(type(self.__system.values['camera'])))
+        #self.eventLstener.sendEvent('camera', str(self.__system.values['camera']).encode('utf8').decode('utf8'))
     def __commandCameraGet(self, data: dict):
-        return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
+        self.eventLstener.i(LogType.SERVER, data.get('marker_camera'))
+        return {'commnad': data['command'], 'data':self.__system.values.get('camera' if not data.get('value') == 'marker' else 'marker_camera')}
     
     def __commandMove(self, data: dict):
         self.eventLstener.sendEvent('controller', data)
@@ -46,12 +53,10 @@ class Server:
     def __commandGetcmds(self, data: dict):
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
 
-    def __listener(self, *arg):
+    def __listener(self, data: dict):
         self.eventLstener.i(LogType.SERVER, f"change value: {self.__system.values}")
-        if type(arg[0]) == dict:
-            if arg[0].get('type', '') == 'close':
-                self.close()
-
+        if data.get('type') == 'marker_camera':
+            self.__system.values['marker_camera'] = data.get('data')
     def __base64_to_image(self, base64_string):
         img_data = base64.b64decode(base64_string)
         np_arr = np.frombuffer(img_data, np.uint8)

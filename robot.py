@@ -6,7 +6,7 @@ from system import RobotSystem
 from event import Event, EventListener
 from RealTime import RealTime
 import time
-import cv2
+from ai import AI
 import socket
 from controller import Controller, ABBController
 import multiprocessing as mp
@@ -39,8 +39,9 @@ class Robot:
 
         self.__controller: Controller = ABBController(self.system)
 
+        self.__ai: AI = AI(self.system)
+
         self.__aiThread: mp.Process = None
-        self.__aiThreadEvent = mp.Event()
         self.__serverThread: mp.Process = None
         self.__serverThreadEvent = mp.Event()
         self.__controllerThread: mp.Process = None
@@ -58,9 +59,6 @@ class Robot:
         self.__server.run(self.__serverThreadEvent)
         self.__server.close()
         self.__log.i(LogType.SERVER, "Server Thread Close")
-
-    def runAI(self):
-        self.__log.i(LogType.AI, "AI Thread Close")
 
     def controller(self):
         self.__controller.run(self.__controllerThreadEvent)
@@ -105,8 +103,8 @@ class Robot:
         self.__serverThread.start()
         self.__log.i(LogType.ROBOT, "Start Server Thread")
 
-        self.__aiThread = mp.Process(target=self.runAI, daemon=True)
-        self.__aiThread.start()
+        self.__aiThread = mp.Process(target=self.__ai.run, daemon=True)
+        #self.__aiThread.start()
         self.__log.i(LogType.ROBOT, "Start AI Thread")
 
         self.__realTime.connect()
@@ -121,10 +119,10 @@ class Robot:
         self.__log.i(LogType.CONTROLLER, "Start Controller Thread")
     def close(self):
         self.__realTime.close()
+        self.__ai.close()
         self.__event.sendEvent('server', {'type':'close'})
         self.__broadcastServerThreadEvent.set()
         self.__serverThreadEvent.set()
-        self.__aiThreadEvent.set()
         self.__backgroundThreadEvent.set()
         self.__controllerThreadEvent.set()
 
@@ -133,7 +131,8 @@ class Robot:
         self.__serverThread.terminate()
         self.__serverThread.join()
         self.__log.i(LogType.ROBOT, "Server Close")
-        self.__aiThread.join()
+        self.__aiThread.join(10)
+        self.__aiThread.terminate()
         self.__log.i(LogType.ROBOT, "AI Thread Close")
         self.__controllerThread.join(10)
         self.__controllerThread.terminate()

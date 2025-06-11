@@ -33,7 +33,7 @@
             }
         }
         startCamera();
-        const socket = new WebSocket('ws://172.30.5.97:8765');
+        const socket = new WebSocket('ws://localhost:8765');
         socket.addEventListener("open", () => {
             console.log("connected");
             socket.send("{\"command\":\"login\", \"password\":\"0000\"}");

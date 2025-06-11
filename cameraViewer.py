@@ -27,12 +27,13 @@ if __name__=="__main__":
         old = None
         while True:
             msg = {
-                'command': 'get_camera'
+                'command': 'get_camera',
+                #'value': 'marker'
             }
             await ws.send(json.dumps(msg))
             response = await ws.recv()
             data = json.loads(response)['data']
-            print(data==old)
+            print(data)
             cv2.imshow('cam', __base64_to_image(data))
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
