@@ -104,7 +104,8 @@ class Robot:
         self.__log.i(LogType.ROBOT, "Start Server Thread")
 
         self.__aiThread = mp.Process(target=self.__ai.run, daemon=True)
-        #self.__aiThread.start()
+        self.__aiThread.start()
+        self.__ai.detectProcess.start()
         self.__log.i(LogType.ROBOT, "Start AI Thread")
 
         self.__realTime.connect()

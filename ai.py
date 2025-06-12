@@ -1,4 +1,5 @@
 import cv2
+import cv2.aruco as aruco
 import numpy as np
 from event import EventListener
 from multiprocessing import Event as mpEvent
@@ -6,6 +7,7 @@ from system import RobotSystem
 from log import LogType
 import heapq
 import base64
+import multiprocessing as mp
 
 class RoadNode:
     def __init__(self, parent=None, position=None):
@@ -26,10 +28,13 @@ class AI:
         self.__mpevent = mpEvent()
         self.__system = system
 
+        self.detectProcess: mp.Process = mp.Process(target=self.__detectArucoMarker)
+
         self.__touchPos: tuple[int, int] = (0,0)
 
-        self.__aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
-        self.__parameters = cv2.aruco.DetectorParameters()
+        self.__aruco_dict = aruco.DICT_5X5_1000
+
+        self.value = mp.Manager().dict()
 
         # 카메라 캘리브레이션 데이터 (임시 값, 실제 캘리브레이션 필요)
         # 예: 640x480 해상도의 카메라에 대한 임시 매트릭스
@@ -40,9 +45,9 @@ class AI:
 
         # 마커의 실제 크기 (미터 단위, 예: 5cm)
         self.__marker_length = 0.05
+        self.__loaded = False
     def __cameraListener(self, data):
-        print('@*!@*&*&@!*@!        CameraGet!!!!!!!!', flush=True)
-        self.__system.values['camera'] = data
+        self.value['camera'] = data
         self.__el.i(LogType.AI, 'cameraGet!')
     
     def __heuristc(self,node, goal, D=1, D2=2 ** 0.5):
@@ -92,48 +97,74 @@ class AI:
 
                 heapq.heappush(openList, new_node)
     
-    def __listener(self, data: dict):
-        if data.get('command') == 'touch':
-            value = data.get('value')
-            if value: self.__touchPos = (value[0], value[1])
+    def __detectArucoMarker(self):
+        while not self.value.get('loaded', False): pass
+        self.__el.i(LogType.AI, "Started detect Thread")
 
-    def run(self):
-        self.__el.run()
-        self.__camera_el.run()
-        self.__el.i(LogType.AI, 'AI Start')
-        return
+        try:
+            dictionary = cv2.aruco.getPredefinedDictionary(self.__aruco_dict)
+            parameters = cv2.aruco.DetectorParameters()
+            detector = cv2.aruco.ArucoDetector(dictionary, parameters)
+        except AttributeError:
+            dictionary = aruco.Dictionary_get(self.__aruco_dict)
+            parameters = aruco.DetectorParameters_create()
         while not self.__mpevent.is_set():
-            img = self.__system.values.get('camera')
+            img = self.value.get('camera')
             if img:
                 if self.__touchPos != (0,0):
 
                     self.__touchPos = (0,0)
 
-                markerImg = img
+                markerImg = self.__base64_to_image(img)
+                gray = cv2.cvtColor(markerImg, cv2.COLOR_BGR2GRAY)
                 
-                corners, ids, rejected = cv2.aruco.detectMarkers(markerImg, self.__aruco_dict, parameters=self.__parameters)
+                #corners, ids, rejected = cv2.aruco.detectMarkers(markerImg, self.__aruco_dict, parameters=self.__parameters)
+                try:
+                    corners, ids, rejectedImgPoints = detector.detectMarkers(gray)
+                except AttributeError:
+                    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, dictionary, parameters=parameters)
 
                 # 결과 처리
                 if ids is not None:
-                    print(f"감지된 마커 수: {len(ids)}")
-                    # 포즈 추정
                     rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, self.__marker_length, self.__camera_matrix, self.__dist_coeffs)
-                    
-                    # 감지된 마커와 축 그리기
+
                     for i in range(len(ids)):
-                        print(f"ID: {ids[i][0]}, 코너: {corners[i]}")
-                        # 마커 테두리 그리기
                         cv2.aruco.drawDetectedMarkers(markerImg, corners, ids)
-                        # x, y, z 축 그리기
                         cv2.drawFrameAxes(markerImg, self.__camera_matrix, self.__dist_coeffs, rvecs[i], tvecs[i], self.__marker_length * 0.5)
                 retval, buffer = cv2.imencode('.png', markerImg)
                 if retval:
                     markerImg = base64.b64encode(buffer).decode('utf8')
-                    print('!',markerImg, flush=True)
-                    self.__system.values['marker_camera'] = markerImg
-                    self.__el.sendEvent('server', {'type':'marker_camera', 'data':self.__system.values['marker_camera']})
+                    self.value['marker_camera'] = markerImg
+                    self.value['update'] = True
+
+    def __listener(self, data: dict):
+        if data.get('command') == 'touch':
+            value = data.get('value')
+            if value: self.__touchPos = (value[0], value[1])
+    
+    def __base64_to_image(self, base64_string):
+        img_data = base64.b64decode(base64_string)
+        np_arr = np.frombuffer(img_data, np.uint8)
+        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        return img
+
+    def run(self):
+        self.__el.run()
+        self.__camera_el.run()
+        self.__el.i(LogType.AI, 'AI Start')
+        self.__camera_el.i(LogType.AI, 'camera start')
+        self.value['loaded'] = True
+
+        #self.__detectProcess.start()
+        
+        while not self.__mpevent.is_set():
+            update = self.value.get('update')
+            if update: self.__el.sendEvent('server', {'type':'marker_camera', 'data':self.value['marker_camera']})
+            
                 
 
 
     def close(self):
         self.__mpevent.set()
+        self.detectProcess.join(5)
+        self.detectProcess.terminate()

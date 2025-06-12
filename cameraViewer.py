@@ -33,7 +33,7 @@ if __name__=="__main__":
             await ws.send(json.dumps(msg))
             response = await ws.recv()
             data = json.loads(response)['data']
-            print(data)
+
             cv2.imshow('cam', __base64_to_image(data))
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

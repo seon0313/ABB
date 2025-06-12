@@ -36,7 +36,7 @@ class Server:
         #self.eventLstener.i(LogType.SERVER, "Get Camera Data")
         self.__system.values['camera'] = data['data'].replace('data:image/png;base64,','')
         #self.eventLstener.i(LogType.SERVER, str(type(self.__system.values['camera'])))
-        #self.eventLstener.sendEvent('camera', str(self.__system.values['camera']).encode('utf8').decode('utf8'))
+        self.eventLstener.sendEvent('camera', self.__system.values['camera'])
     def __commandCameraGet(self, data: dict):
         self.eventLstener.i(LogType.SERVER, data.get('marker_camera'))
         return {'commnad': data['command'], 'data':self.__system.values.get('camera' if not data.get('value') == 'marker' else 'marker_camera')}
@@ -54,8 +54,8 @@ class Server:
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
 
     def __listener(self, data: dict):
-        self.eventLstener.i(LogType.SERVER, f"change value: {self.__system.values}")
         if data.get('type') == 'marker_camera':
+            self.eventLstener.i(LogType.SERVER, "get marker camera")
             self.__system.values['marker_camera'] = data.get('data')
     def __base64_to_image(self, base64_string):
         img_data = base64.b64decode(base64_string)

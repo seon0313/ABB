@@ -46,18 +46,19 @@ class Event:
         bs = c.recv(8)
         (length,) = struct.unpack('>Q', bs)
         data = b''
-        print('read',length, len(data), flush=True)
         while len(data) < length:
             to_read = length - len(data)
             data += c.recv(
                 4096 if to_read > 4096 else to_read)
         
         data = data.decode('utf8')
+        #print('read:\t', data.split('value')[0], flush=True)
         return data
 
     def __client(self, client: socket.socket, addr):
         id = client.recv(1024).decode('utf8')
         client.sendall('end'.encode('utf8'))
+        print('Event',id, flush=True)
         self.__log.i(LogType.EVENT, f'connected id:{id} | {addr}')
         if not self.__clients.get(id, None): self.__clients[id] = [client]
         else: self.__clients[id].append(client)
@@ -68,18 +69,18 @@ class Event:
 
         while not self.__threadEvent.is_set():
             try:
-                if self.__threadEvent.is_set(): break
-                if overflow != '' and overflow[-1] == '\0': 
-                    data = overflow.split('\0')
-                    overflow = ''
-                else:
-                    data = str(overflow+(self.__read(client))).split('\0')
-                    if len(data)>1:
-                        overflow = data[1]
-                        if len(data) >= 3: overflow += '\0'
-                    else: overflow = ''
+                #if self.__threadEvent.is_set(): break
+                #if overflow != '' and overflow[-1] == '\0': 
+                #    data = overflow.split('\0')
+                #    overflow = ''
+                #else:
+                #    data = str(overflow+(self.__read(client))).split('\0')
+                #    if len(data)>1:
+                #        overflow = data[1]
+                #        if len(data) >= 3: overflow += '\0'
+                #    else: overflow = ''
 
-                data: dict = json.loads(data[0])
+                data: dict = json.loads(self.__read(client)[:-1])
 
                 type_ = data.get('type', '')
 
@@ -177,7 +178,7 @@ class EventListener:
 
         while not self.__threadEvent.is_set():
             try:
-                data = self.__client.recv(4096)
+                #data = self.__read(self.__client)
                 data: dict = json.loads(self.__read(self.__client))
                 self.func(data)
             except Exception as e: self.sendLog(LogType.EVENT, LogMessageType.ERROR, f'L:\t{e}')
