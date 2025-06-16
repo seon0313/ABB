@@ -12,6 +12,7 @@ class LogType(Enum):
     REALTIME = 5
     BROADCAST = 6
     EVENT = 7
+    CAMERA_SERVER = 8
     def getLogType(val: int):
         _map = LogType._member_map_.values()
         for i in _map:

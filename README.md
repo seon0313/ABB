@@ -48,6 +48,8 @@ Robot
 │
 ├── Server
 │
+├── CameraServer
+│
 ├── RealTime
 │
 ├── Controller
@@ -87,7 +89,7 @@ Robot
 컨트롤러 통신, 프로세스 통신에 필요한 포트를 사용하지 말아주세요.
 * `8765`: *Websocket*
 * `7564`: *Event*
-* `8267`: *Log*
+* `9119`: *Camera Server*
 
 `Unity` 프로그램을 설치하지 않았을 시 `/Debug`에서 `app.py`를 실행하여 서버에 접속할수 있는 웹프로그램을 실행할수 있습니다. 인터넷 브라우저에서 접속후 사용하세요. `port = 9181`
 (필수 기능만 사용가능)

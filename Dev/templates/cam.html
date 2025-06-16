@@ -9,13 +9,14 @@
 </head>
 <body>
     <div>
-        <input type="text" placeholder="ws//ip:port" value="ws://localhost:8765">
-        <button>connect</button>
+        <input type="text" id="text" placeholder="ws//ip:port" value="ws://localhost:8765">
+        <button onclick="connectStart()">connect</button>
     </div>
     <h3 id="123"></h3>
     <video id="video" autoplay></video>
     <canvas id="canvas"></canvas>
     <script>
+        var a = false;
         let stream;
         async function startCamera() {
             try {
@@ -32,16 +33,45 @@
                 console.error('카메라 접근 오류:', error);
             }
         }
+        
         startCamera();
-        const socket = new WebSocket('ws://localhost:8765');
-        socket.addEventListener("open", () => {
-            console.log("connected");
-            socket.send("{\"command\":\"login\", \"password\":\"0000\"}");
-        })
-        socket.onmessage = (event) => {
-            console.log("Message from server:", event.data);
-            const jsonData = JSON.parse(event.data);
-            if (jsonData.type === 'get_image'){
+
+        function connectStart(){
+            if (a) return
+            
+            const ip_ = document.getElementById('text')
+            console.log(ip_.value)
+            const socket = new WebSocket(ip_.value);
+            socket.addEventListener("open", () => {
+                console.log("connected");
+                socket.send("{\"command\":\"login\", \"password\":\"0000\"}");
+            })
+            socket.onmessage = (event) => {
+                console.log("Message from server:", event.data);
+                const jsonData = JSON.parse(event.data);
+                if (jsonData.type === 'get_image'){
+                    const video = document.getElementById('video');
+                    const canvas = document.getElementById('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = canvas.toDataURL('image/png');
+                    console.log(imageData);
+                    document.getElementById("123").textContent = imageData;
+                    //socket.send("{\"type\":\"image\", \"data\":\""+imageData+"\"}")
+                }
+            };
+            socket.onerror = (error) => {
+                console.log("Error has occured:", error);
+            };
+            socket.onclose = () => {
+                console.log("WebSocket is closed");
+            };
+
+            function sendCamera(){
+                console.log("Send Camera Data");
                 const video = document.getElementById('video');
                 const canvas = document.getElementById('canvas');
                 const context = canvas.getContext('2d');
@@ -51,34 +81,13 @@
                 
                 const imageData = canvas.toDataURL('image/png');
                 console.log(imageData);
-                document.getElementById("123").textContent = imageData;
-                //socket.send("{\"type\":\"image\", \"data\":\""+imageData+"\"}")
+                // document.getElementById("123").textContent = imageData;
+                socket.send("{\"command\":\"camera\", \"data\":\""+imageData+"\"}");
+                setTimeout(function () {sendCamera()}, 1000/30);
             }
-        };
-        socket.onerror = (error) => {
-            console.log("Error has occured:", error);
-        };
-        socket.onclose = () => {
-            console.log("WebSocket is closed");
-        };
 
-        function sendCamera(){
-            console.log("Send Camera Data");
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const imageData = canvas.toDataURL('image/png');
-            console.log(imageData);
-            // document.getElementById("123").textContent = imageData;
-            socket.send("{\"command\":\"camera\", \"data\":\""+imageData+"\"}");
-            setTimeout(function () {sendCamera()}, 1000/30);
+            setTimeout(function () {sendCamera()},10000);
         }
-
-        setTimeout(function () {sendCamera()},10000);
     </script>
 </body>
 </html>

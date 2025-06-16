@@ -8,6 +8,7 @@ from log import LogType
 import heapq
 import base64
 import multiprocessing as mp
+import time
 
 class RoadNode:
     def __init__(self, parent=None, position=None):
@@ -108,13 +109,19 @@ class AI:
         except AttributeError:
             dictionary = aruco.Dictionary_get(self.__aruco_dict)
             parameters = aruco.DetectorParameters_create()
+
+        old_img = ''
+
         while not self.__mpevent.is_set():
             img = self.value.get('camera')
             if img:
                 if self.__touchPos != (0,0):
 
                     self.__touchPos = (0,0)
-
+                if img==old_img:
+                    self.__el.i(LogType.AI, "image ==")
+                    time.sleep(0.5)
+                    conti
                 markerImg = self.__base64_to_image(img)
                 gray = cv2.cvtColor(markerImg, cv2.COLOR_BGR2GRAY)
                 
@@ -136,6 +143,8 @@ class AI:
                     markerImg = base64.b64encode(buffer).decode('utf8')
                     self.value['marker_camera'] = markerImg
                     self.value['update'] = True
+                self.__el.i(LogType.AI, "GEN ARUCO")
+            old_img = img
 
     def __listener(self, data: dict):
         if data.get('command') == 'touch':
