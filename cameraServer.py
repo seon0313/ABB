@@ -6,15 +6,18 @@ import base64
 import numpy as np
 
 class CameraServer:
-    def __init__(self, host: '0.0.0.0', port=9119):
-        self.__el: EventListener = EventListener('cameraServer')
+    def __init__(self, host:str = '0.0.0.0', port:int=9119):
+        self.__el: EventListener = EventListener('cameraServer', self.__listener)
         self.__server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.__host = host
-        self.__port = port
+        self.host = host
+        self.port = port
         self.__thread: threading.Thread = threading.Thread(target=self.__loop)
         self.__event: threading.Event = threading.Event()
 
         self.camera = ''
+    
+    def __listener(self, data: dict):
+        self.__el.i(LogType.CAMERA_SERVER, f'recvEvent: {data}')
 
     def __base64_to_image(self, base64_string):
         img_data = base64.b64decode(base64_string)
@@ -23,8 +26,8 @@ class CameraServer:
         return img
 
     def __send(self, data):
-        self.__server.sendto(struct.pack('>Q', len(data)), (self.__host, self.__port))
-        self.__server.sendto(data, (self.__host, self.__port))
+        self.__server.sendto(struct.pack('>Q', len(data)), (self.host, self.port))
+        self.__server.sendto(data, (self.host, self.port))
 
     def __read(self) -> str:
         bs, addr = self.__server.recvfrom(8)
@@ -41,8 +44,13 @@ class CameraServer:
     
     def __loop(self):
         while not self.__event.is_set():
-            data, addr = server_socket.recvfrom(BUFFER_SIZE)
+            data = self.__read().replace('data:image/png;base64,','')
+            self.__el.sendEvent('camera', data)
     
     def run(self):
         self.__el.run()
-        self.__server.bind((self.__host, self.__port))
+        self.__server.bind((self.host, self.port))
+    
+    def close(self):
+        self.__event.is_set()
+        self.__server.close()

@@ -1,6 +1,7 @@
 from enum import Enum
 import threading
 from server import Server
+from cameraServer import CameraServer
 from log import Log, LogMessageType, LogType
 from system import RobotSystem
 from event import Event, EventListener
@@ -51,6 +52,9 @@ class Robot:
         self.__broadcastServerThread: threading.Thread = None
         self.__broadcastServerThreadEvent: threading.Event = threading.Event()
 
+        self.__cameraServer: CameraServer = CameraServer()
+        self.__cameraServerThread: mp.Process = None
+
         self.__Listener = EventListener('test', lambda x: self.__log.i(LogType.EVENT, f'I get Event {x}'))
 
         self.__log.i(LogType.ROBOT, "Load END")
@@ -84,7 +88,8 @@ class Robot:
                 'ip': socket.gethostbyname(socket.gethostname()),
                 'port': 8765,
                 'name': self.system.name,
-                'version': self.system.version
+                'version': self.system.version,
+                'cameraPort': self.__cameraServer.port
             }
             sock.sendto(json.dumps(msg).encode('utf8'), ('255.255.255.255', 5891))
             time.sleep(5)
@@ -118,6 +123,10 @@ class Robot:
         self.__controllerThread = mp.Process(target=self.controller, daemon=True)
         self.__controllerThread.start()
         self.__log.i(LogType.CONTROLLER, "Start Controller Thread")
+
+        self.__cameraServerThread = mp.Process(target=self.__cameraServer.run, daemon=True)
+        self.__cameraServerThread.start()
+        self.__log.i(LogType.CAMERA_SERVER, "Start CameraServer Thread")
     def close(self):
         self.__realTime.close()
         self.__ai.close()
@@ -126,6 +135,7 @@ class Robot:
         self.__serverThreadEvent.set()
         self.__backgroundThreadEvent.set()
         self.__controllerThreadEvent.set()
+        self.__cameraServer.close()
 
         self.__broadcastServerThread.join()
         self.__log.i(LogType.ROBOT, "BroadcastServer Close")
