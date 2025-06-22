@@ -15,7 +15,7 @@ class MotorPWM:
         self.__pwm: GPIO.PWM = GPIO.PWM(self.__pinEN, 100)
         self.__pwm.start(0)
     
-    def run(self,value: Value):
+    def run(self,value):
         self.__pwm.ChangeDutyCycle(value.value)
 
         if self.reverse:
