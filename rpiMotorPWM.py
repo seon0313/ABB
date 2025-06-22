@@ -1,5 +1,4 @@
 import RPi.GPIO as GPIO
-from controller import Value
 
 class MotorPWM:
     def __init__(self,motorPinEN: int, motorPinA: int, motorPinB: int, reverse: bool = False):
