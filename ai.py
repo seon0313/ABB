@@ -121,7 +121,7 @@ class AI:
                 if img==old_img:
                     self.__el.i(LogType.AI, "image ==")
                     time.sleep(0.5)
-                    conti
+                    continue
                 markerImg = self.__base64_to_image(img)
                 gray = cv2.cvtColor(markerImg, cv2.COLOR_BGR2GRAY)
                 
