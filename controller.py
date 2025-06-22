@@ -2,8 +2,7 @@ from system import RobotSystem
 from event import EventListener
 from log import LogType
 from enum import Enum
-from rpiMotorPWM import MotorPWM
-import RPi.GPIO as GPIO
+from gpiozero import Motor
 
 class ValueType(Enum):
     RANGE = 0
@@ -56,7 +55,7 @@ class ABBController(Controller):
     def __init__(self, system: RobotSystem):
         super().__init__(system)
         self.__motorList: dict = {
-            'top-left' : Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM(8,10,12)),
+            'top-left' : Motor(10,12,8),
         }
         #self.__motorList['top-right'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
         #self.__motorList['bottom-left'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
@@ -72,26 +71,28 @@ class ABBController(Controller):
     def moveFront(self, angles: dict, motors: dict):
         speed = angles['front'][0]
         for motor in motors.values():
-            motor: Value = motor
-            motor.setValue(speed)
+            motor: Motor = motor
+            motor.forward(speed)
 
     def moveBottom(self, angles: dict, motors: dict):
         speed = angles['bottom'][0]
         for motor in motors.values():
-            motor: Value = motor
-            motor.setValue(-speed)
+            motor: Motor = motor
+            motor.forward(-speed)
 
     def moveLeft(self, angles: dict, motors: dict):
         speed = angles['left'][0]
         for motor_ in motors.keys():
-            motor: Value = motors[motor_]
-            motor.setValue(speed if 'left' in motor_ else -speed)
+            motor: Motor = motors[motor_]
+            if 'left' in motor_: motor.forward(speed)
+            else: motor.backward(speed)
 
     def moveRight(self, angles: dict, motors: dict):
         speed = angles['right'][0]
         for motor_ in motors.keys():
-            motor: Value = motors[motor_]
-            motor.setValue(-speed if 'left' in motor_ else speed)
+            motor: Motor = motors[motor_]
+            if 'left' in motor_: motor.backward(speed)
+            else: motor.forward(speed)
 
     def run(self, event):
         return super().run(event)
