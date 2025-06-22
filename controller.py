@@ -64,7 +64,7 @@ class ABBController(Controller):
 
         self.__moveAngles: dict = {
             'front': [0, self.moveFront],
-            'bottom': [0, self.moveBottom],,
+            'bottom': [0, self.moveBottom],
             'left': [0, self.moveLeft],
             'right': [0, self.moveBottom],
         }
