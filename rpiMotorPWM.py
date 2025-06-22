@@ -8,6 +8,7 @@ class MotorPWM:
 
         self.reverse: bool = reverse
 
+        GPIO.setup(self.__pinEN, GPIO.OUT)
         GPIO.setup(self.__pinA, GPIO.OUT)
         GPIO.setup(self.__pinB, GPIO.OUT)
 
