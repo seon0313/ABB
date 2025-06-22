@@ -12,31 +12,8 @@ class Controller:
     def __init__(self, system: RobotSystem):
         self.__system: RobotSystem = system
         self.__handle: dict = None
-        self.__motorList: dict[Motor] = {}
-        self.__moveAngles: dict[list[int, any]] = {}
         self.eventListener: EventListener = EventListener('controller', self.__listener)
-    
-    def __listener(self, *arg):
-        self.__handle = arg[0]
-        if self.__handle.get('direction') in self.__moveAngles.keys():
-            self.__moveAngles[self.__handle.get('direction')][0] = self.__handle.get('value', 0)
-            self.__moveAngles[self.__handle.get('direction')][1](self.__moveAngles, self.__motorList)
-            self.eventListener.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
-    
-    def run(self, event):
-        self.eventListener.run()
-        while not event.is_set():
-            if self.__handle:
-                self.eventListener.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
-                self.__handle = None
-            
-            for i in self.__motorList.values():
-                i.controll.run(i)
-        self.eventListener.close()
 
-class ABBController(Controller):
-    def __init__(self, system: RobotSystem):
-        super().__init__(system)
         self.__motorList: dict = {
             'top-left' : Motor(10,12,enable=8),
         }
@@ -50,7 +27,29 @@ class ABBController(Controller):
             'left': [0, self.moveLeft],
             'right': [0, self.moveBottom],
         }
-
+    
+    def __listener(self, *arg):
+        self.__handle = arg[0]
+        if self.__handle.get('direction') in self.__moveAngles.keys():
+            self.__moveAngles[self.__handle.get('direction')][0] = self.__handle.get('value', 0)
+            self.__moveAngles[self.__handle.get('direction')][1](self.__moveAngles, self.__motorList)
+            self.eventListener.i(LogType.CONTROLLER, f"Move: {self.__handle.get('direction')} value: {self.__moveAngles[self.__handle.get('direction')].value}")
+        
+    def run(self, event):
+        self.eventListener.run()
+        while not event.is_set():
+            if self.__handle:
+                self.eventListener.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
+                self.__handle = None
+            
+            for i in self.__motorList.values():
+                i.controll.run(i)
+        self.eventListener.close()
+    
+    def close(self):
+        for i in self.__motorList.values():
+            i.close()
+    
     def moveFront(self, angles: dict, motors: dict):
         speed = angles['front'][0]
         for motor in motors.values():
@@ -76,6 +75,3 @@ class ABBController(Controller):
             motor: Motor = motors[motor_]
             if 'left' in motor_: motor.backward(speed)
             else: motor.forward(speed)
-
-    def run(self, event):
-        return super().run(event)

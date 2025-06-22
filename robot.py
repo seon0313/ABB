@@ -9,7 +9,7 @@ from RealTime import RealTime
 import time
 from ai import AI
 import socket
-from controller import Controller, ABBController
+from controller import Controller
 import multiprocessing as mp
 import json
 
@@ -38,7 +38,7 @@ class Robot:
             f.close()
         self.__realTime: RealTime = RealTime(OPENAI_API_KEY)
 
-        self.__controller: Controller = ABBController(self.system)
+        self.__controller: Controller = Controller(self.system)
 
         self.__ai: AI = AI(self.system)
 
@@ -135,6 +135,7 @@ class Robot:
         self.__serverThreadEvent.set()
         self.__backgroundThreadEvent.set()
         self.__controllerThreadEvent.set()
+        self.__controller.close()
         self.__cameraServer.close()
 
         self.__broadcastServerThread.join()
