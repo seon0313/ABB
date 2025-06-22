@@ -31,7 +31,6 @@ class Controller:
         self.__motorList: dict[Value] = {}
         self.__moveAngles: dict[Value] = {}
         self.eventListener: EventListener = EventListener('controller', self.__listener)
-        GPIO.setmode(GPIO.BCM)
     
     def __listener(self, *arg):
         self.__handle = arg[0]
