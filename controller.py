@@ -41,9 +41,6 @@ class Controller:
             if self.__handle:
                 self.eventListener.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
                 self.__handle = None
-            
-            for i in self.__motorList.values():
-                i.controll.run(i)
         self.eventListener.close()
     
     def close(self):
