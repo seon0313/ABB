@@ -18,7 +18,6 @@ class Value:
         self.defaultValue = defaultValue
         self.value = self.defaultValue
         self.controll = controll
-        GPIO.setmode(GPIO.BOARD)
     
     def setValue(self, value):
         if value < self.minValue: value = self.minValue
@@ -33,6 +32,7 @@ class Controller:
         self.__motorList: dict[Value] = {}
         self.__moveAngles: dict[Value] = {}
         self.eventListener: EventListener = EventListener('controller', self.__listener)
+        GPIO.setmode(GPIO.BOARD)
     
     def __listener(self, *arg):
         self.__handle = arg[0]
