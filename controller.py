@@ -38,7 +38,7 @@ class ABBController(Controller):
     def __init__(self, system: RobotSystem):
         super().__init__(system)
         self.__motorList: dict = {
-            'top-left' : Motor(10,12,8),
+            'top-left' : Motor(10,12,enable=8),
         }
         #self.__motorList['top-right'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
         #self.__motorList['bottom-left'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
