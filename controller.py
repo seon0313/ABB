@@ -55,15 +55,19 @@ class Controller:
 class ABBController(Controller):
     def __init__(self, system: RobotSystem):
         super().__init__(system)
-        self.__motorList['top-left'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM(8,10,12))
+        self.__motorList: dict = {
+            'top-left' : Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM(8,10,12)),
+        }
         #self.__motorList['top-right'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
         #self.__motorList['bottom-left'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
         #self.__motorList['bottom-right'] = Value(ValueType.RANGE, minValue=-255, maxValue=255, defaultValue=0, controll=MotorPWM())
 
-        self.__moveAngles['front'] = [0, self.moveFront]
-        self.__moveAngles['bottom'] = [0, self.moveBottom]
-        self.__moveAngles['left'] = [0, self.moveLeft]
-        self.__moveAngles['right'] = [0, self.moveBottom]
+        self.__moveAngles: dict = {
+            'front': [0, self.moveFront],
+            'bottom': [0, self.moveBottom],,
+            'left': [0, self.moveLeft],
+            'right': [0, self.moveBottom],
+        }
 
     def moveFront(self, angles: dict, motors: dict):
         speed = angles['front'][0]
