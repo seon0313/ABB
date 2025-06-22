@@ -8,28 +8,12 @@ class ValueType(Enum):
     RANGE = 0
     VALUE = 1
 
-
-class Value:
-    def __init__(self, valueType: ValueType, minValue: int | float, maxValue: int | float, defaultValue: int | float, controll: MotorPWM):
-        self.valueType = valueType
-        self.minValue = minValue
-        self.maxValue = maxValue
-        self.defaultValue = defaultValue
-        self.value = self.defaultValue
-        self.controll = controll
-    
-    def setValue(self, value):
-        if value < self.minValue: value = self.minValue
-        if value > self.maxValue: value = self.maxValue
-        self.value = value
-    
-
 class Controller:
     def __init__(self, system: RobotSystem):
         self.__system: RobotSystem = system
         self.__handle: dict = None
-        self.__motorList: dict[Value] = {}
-        self.__moveAngles: dict[Value] = {}
+        self.__motorList: dict[Motor] = {}
+        self.__moveAngles: dict[list[int, any]] = {}
         self.eventListener: EventListener = EventListener('controller', self.__listener)
     
     def __listener(self, *arg):
