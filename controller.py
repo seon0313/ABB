@@ -42,7 +42,7 @@ class Controller:
         while not event.is_set():
             if self.__handle:
                 self.eventListener.i(LogType.CONTROLLER, f"get Value! {self.__handle}")
-                self.__handle = None
+                #self.__handle = None
         self.eventListener.close()
     
     def close(self):
