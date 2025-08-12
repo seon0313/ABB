@@ -8,5 +8,4 @@ sock_recv.bind(('', 5891)) # 수신 포트 설정 (전송 포트와 동일해야
 data, address = sock_recv.recvfrom(1024)
 
 print(f"Received message from {address}: {data.decode()}")
-
 sock_recv.close()
