@@ -31,6 +31,7 @@ class Controller:
     def __listener(self, *arg):
         self.__handle = arg[0]
         self.eventListener.i(LogType.CONTROLLER, f"Controller: {self.__handle}")
+        self.eventListener.i(LogType.CONTROLLER, f"Controller: {type(self.__handle)}")
         if self.__handle.get('direction') in self.__moveAngles.keys():
             self.__moveAngles[self.__handle.get('direction')][0] = self.__handle.get('value', 0)
             self.__moveAngles[self.__handle.get('direction')][1](self.__moveAngles, self.__motorList)
