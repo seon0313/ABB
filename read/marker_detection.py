@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # ArUco 딕셔너리와 파라미터 설정
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
 parameters = cv2.aruco.DetectorParameters()
 
 # 카메라 캘리브레이션 데이터 (임시 값, 실제 캘리브레이션 필요)
@@ -16,7 +16,7 @@ dist_coeffs = np.zeros((5, 1), dtype=np.float32)  # 왜곡 계수 (임시로 0)
 marker_length = 0.05
 
 # 이미지 로드
-image_path = "./read/map_top.png"  # 감지할 이미지 경로
+image_path = './markers/1.png'#"/home/SEON/Pictures/Screenshots/s.png"  # 감지할 이미지 경로
 image = cv2.imread(image_path)
 if image is None:
     print(f"이미지를 로드할 수 없습니다: {image_path}")

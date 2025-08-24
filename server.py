@@ -16,7 +16,7 @@ class Server:
         self.__server: websockets.serve = None
 
         self.__system = system
-        self.eventLstener = EventListener("server", self.__listener)
+        self.eventListener = EventListener("server", self.__listener)
 
         self.__commands: dict = {
             'get': self.__commandGet,
@@ -25,33 +25,46 @@ class Server:
             'move': self.__commandMove,
             'camera': self.__commandCamera,
             'get_camera': self.__commandCameraGet,
+            'touch': self.__commandTouch,
         }
         self.event = mpEvent()
+        self.websocket = None
+    
+    def __commandTouch(self, data):
+        self.eventListener.sendEvent('ai', data)
     
     def __commandCamera(self, data: dict):
-        self.eventLstener.i(LogType.SERVER, "Get Camera Data")
+        #self.eventListener.i(LogType.SERVER, "Get Camera Data")
         self.__system.values['camera'] = data['data'].replace('data:image/png;base64,','')
+        #self.eventListener.i(LogType.SERVER, str(type(self.__system.values['camera'])))
+        self.eventListener.sendEvent('camera', self.__system.values['camera'])
     def __commandCameraGet(self, data: dict):
-        return {'commnad': data['command'], 'data':self.__system.values.get('camera')}
+        self.eventListener.i(LogType.SERVER, data.get('marker_camera'))
+        return {'commnad': data['command'], 'data':self.__system.values.get('camera' if not data.get('value') == 'marker' else 'marker_camera')}
     
     def __commandMove(self, data: dict):
-        self.eventLstener.sendEvent('controller', data)
+        self.eventListener.sendEvent('controller', data)
     
     def __commandInfo(self, data: dict):
         return {'command':data['command'], 'name': self.__system.name, 'version': self.__system.version}
     
     def __commandGet(self, data: dict):
-        self.eventLstener.w(LogType.SERVER, f"{self.__system.values}")
+        self.eventListener.w(LogType.SERVER, f"{self.__system.values}")
         return self.__system.values
     def __commandGetcmds(self, data: dict):
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
+    
+    async def send(self, data):
+        await self.websocket.send(data)
 
-    def __listener(self, *arg):
-        self.eventLstener.i(LogType.SERVER, f"change value: {self.__system.values}")
-        if type(arg[0]) == dict:
-            if arg[0].get('type', '') == 'close':
-                self.close()
-
+    def __listener(self, data: dict):
+        if data.get('type') == 'log':
+            try: asyncio.run(self.websocket.send(json.dumps({'command':'log', 'data': data['data']})))
+            except:
+                pass
+        if data.get('type') == 'marker_camera':
+            self.eventListener.i(LogType.SERVER, "get marker camera")
+            self.__system.values['marker_camera'] = data.get('data')
     def __base64_to_image(self, base64_string):
         img_data = base64.b64decode(base64_string)
         np_arr = np.frombuffer(img_data, np.uint8)
@@ -60,9 +73,10 @@ class Server:
     
     async def __client(self, websocket):
         #try:
+        if (self.websocket != websocket): self.websocket = websocket
         client_id = id(websocket)
         _ip, _port = websocket.remote_address
-        self.eventLstener.i(LogType.SERVER,
+        self.eventListener.i(LogType.SERVER,
                                 f"Connected New Client id: {client_id} | {_ip}:{_port}")
         logined = False
         while not self.event.is_set() and not logined:
@@ -94,26 +108,26 @@ class Server:
                 if value: await websocket.send(json.dumps(value))
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER, f'Error CLient id: {client_id} | {e}')
-        self.eventLstener.i(LogType.SERVER,
+        self.eventListener.i(LogType.SERVER,
                                 f"Disconnected Client id: {client_id} | {_ip}:{_port}")
         #except Exception as e:
         #    self.__system__.log.e(LogType.SERVER,f"Client Error {e}")
     async def __start_server(self):
         try:
-            self.eventLstener.i(LogType.SERVER, "Opening Server...")
+            self.eventListener.i(LogType.SERVER, "Opening Server...")
             #loop = asyncio.new_event_loop()
             #asyncio.set_event_loop(loop)
             self.__server = await websockets.serve(self.__client, self.__host, self.__port)
-            self.eventLstener.i(LogType.SERVER, "Server Opened")
+            self.eventListener.i(LogType.SERVER, "Server Opened")
             await self.__server.wait_closed()
         except Exception as e:
-            self.eventLstener.e(LogType.SERVER,
+            self.eventListener.e(LogType.SERVER,
                                   f"Start Error - {e}")
     def close(self):
         if self.__server:
             self.__server.close()
-        self.eventLstener.i(LogType.SERVER, "Server Close")
+        self.eventListener.i(LogType.SERVER, "Server Close")
     def run(self, event):
-        self.eventLstener.run()
+        self.eventListener.run()
         self.event = event
         asyncio.run(self.__start_server())

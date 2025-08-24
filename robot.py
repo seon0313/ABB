@@ -1,14 +1,15 @@
 from enum import Enum
 import threading
 from server import Server
+from cameraServer import CameraServer
 from log import Log, LogMessageType, LogType
 from system import RobotSystem
 from event import Event, EventListener
 from RealTime import RealTime
 import time
-import cv2
+from ai import AI
 import socket
-from controller import Controller, ABBController
+from controller import Controller
 import multiprocessing as mp
 import json
 
@@ -37,10 +38,11 @@ class Robot:
             f.close()
         self.__realTime: RealTime = RealTime(OPENAI_API_KEY)
 
-        self.__controller: Controller = ABBController(self.system)
+        self.__controller: Controller = Controller(self.system)
+
+        self.__ai: AI = AI(self.system)
 
         self.__aiThread: mp.Process = None
-        self.__aiThreadEvent = mp.Event()
         self.__serverThread: mp.Process = None
         self.__serverThreadEvent = mp.Event()
         self.__controllerThread: mp.Process = None
@@ -50,6 +52,9 @@ class Robot:
         self.__broadcastServerThread: threading.Thread = None
         self.__broadcastServerThreadEvent: threading.Event = threading.Event()
 
+        self.__cameraServer: CameraServer = CameraServer()
+        self.__cameraServerThread: mp.Process = None
+
         self.__Listener = EventListener('test', lambda x: self.__log.i(LogType.EVENT, f'I get Event {x}'))
 
         self.__log.i(LogType.ROBOT, "Load END")
@@ -58,9 +63,6 @@ class Robot:
         self.__server.run(self.__serverThreadEvent)
         self.__server.close()
         self.__log.i(LogType.SERVER, "Server Thread Close")
-
-    def runAI(self):
-        self.__log.i(LogType.AI, "AI Thread Close")
 
     def controller(self):
         self.__controller.run(self.__controllerThreadEvent)
@@ -81,14 +83,27 @@ class Robot:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.__log.i(LogType.BROADCAST, "BroadCast On")
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            s.connect(("8.8.8.8", 80))  # Google DNS 서버 사용
+
+            ip = s.getsockname()[0]  # 소켓에 바인딩된 IP 주소 가져오기
+
+            s.close()
+        except:
+            ip = socket.gethostbyname(socket.gethostname())
+
         while not self.__broadcastServerThreadEvent.is_set():
             msg = {
-                'ip': socket.gethostbyname(socket.gethostname()),
+                'ip': ip,
                 'port': 8765,
                 'name': self.system.name,
-                'version': self.system.version
+                'version': self.system.version,
+                'cameraPort': self.__cameraServer.port
             }
             sock.sendto(json.dumps(msg).encode('utf8'), ('255.255.255.255', 5891))
+            sock.sendto(json.dumps(msg).encode('utf8'), ('192.168.0.255', 5891))
             time.sleep(5)
         sock.close()
         self.__log.i(LogType.BROADCAST, "Broadcast Thread Close")
@@ -105,8 +120,9 @@ class Robot:
         self.__serverThread.start()
         self.__log.i(LogType.ROBOT, "Start Server Thread")
 
-        self.__aiThread = mp.Process(target=self.runAI, daemon=True)
+        self.__aiThread = mp.Process(target=self.__ai.run, daemon=True)
         self.__aiThread.start()
+        self.__ai.detectProcess.start()
         self.__log.i(LogType.ROBOT, "Start AI Thread")
 
         self.__realTime.connect()
@@ -119,21 +135,28 @@ class Robot:
         self.__controllerThread = mp.Process(target=self.controller, daemon=True)
         self.__controllerThread.start()
         self.__log.i(LogType.CONTROLLER, "Start Controller Thread")
+
+        self.__cameraServerThread = mp.Process(target=self.__cameraServer.run, daemon=True)
+        self.__cameraServerThread.start()
+        self.__log.i(LogType.CAMERA_SERVER, "Start CameraServer Thread")
     def close(self):
         self.__realTime.close()
+        self.__ai.close()
         self.__event.sendEvent('server', {'type':'close'})
         self.__broadcastServerThreadEvent.set()
         self.__serverThreadEvent.set()
-        self.__aiThreadEvent.set()
         self.__backgroundThreadEvent.set()
         self.__controllerThreadEvent.set()
+        self.__controller.close()
+        self.__cameraServer.close()
 
         self.__broadcastServerThread.join()
         self.__log.i(LogType.ROBOT, "BroadcastServer Close")
         self.__serverThread.terminate()
         self.__serverThread.join()
         self.__log.i(LogType.ROBOT, "Server Close")
-        self.__aiThread.join()
+        self.__aiThread.join(10)
+        self.__aiThread.terminate()
         self.__log.i(LogType.ROBOT, "AI Thread Close")
         self.__controllerThread.join(10)
         self.__controllerThread.terminate()

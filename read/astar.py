@@ -3,7 +3,6 @@
 # heapque를 이용하면 길을 출력할 때 reverse를 안해도 됨
 
 import heapq  # priority queue
-import pygame
 
 class Node:
     def __init__(self, parent=None, position=None):
@@ -100,6 +99,9 @@ def main():
     path = aStar(maze, start, end)
     print(path)
     if path:
+        for i in path:
+            print(i)
+        print('\n\n==============\n\n')
         for y,i in enumerate(maze):
             for x,j in enumerate(i):
                 if (x,y) == start: print('@', end=' ')

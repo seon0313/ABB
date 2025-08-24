@@ -12,6 +12,7 @@ class LogType(Enum):
     REALTIME = 5
     BROADCAST = 6
     EVENT = 7
+    CAMERA_SERVER = 8
     def getLogType(val: int):
         _map = LogType._member_map_.values()
         for i in _map:
@@ -54,6 +55,12 @@ class Log:
         self.addLog(logType, LogMessageType.ERROR, message)
     def w(self, logType: LogType, message: str):
         self.addLog(logType, LogMessageType.WARNING, message)
+    
+    def logToStr(logType: LogType, messageType: LogMessageType, message:str):
+        t = time.strftime('[%Y/%m/%d %H:%M:%S]', time.localtime(time.time()))
+        logmsg = f'{t} {logType.name}-{messageType.name} | {message}\n'
+        return logmsg
+
 
     def addLog(self,logType: LogType, messageType: LogMessageType, message: str):
         msg = (time.time(), logType, messageType, message)
