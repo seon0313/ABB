@@ -55,6 +55,12 @@ class Log:
         self.addLog(logType, LogMessageType.ERROR, message)
     def w(self, logType: LogType, message: str):
         self.addLog(logType, LogMessageType.WARNING, message)
+    
+    def logToStr(logType: LogType, messageType: LogMessageType, message:str):
+        t = time.strftime('[%Y/%m/%d %H:%M:%S]', time.localtime(time.time()))
+        logmsg = f'{t} {logType.name}-{messageType.name} | {message}\n'
+        return logmsg
+
 
     def addLog(self,logType: LogType, messageType: LogMessageType, message: str):
         msg = (time.time(), logType, messageType, message)

@@ -83,15 +83,27 @@ class Robot:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.__log.i(LogType.BROADCAST, "BroadCast On")
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            s.connect(("8.8.8.8", 80))  # Google DNS 서버 사용
+
+            ip = s.getsockname()[0]  # 소켓에 바인딩된 IP 주소 가져오기
+
+            s.close()
+        except:
+            ip = socket.gethostbyname(socket.gethostname())
+
         while not self.__broadcastServerThreadEvent.is_set():
             msg = {
-                'ip': socket.gethostbyname(socket.gethostname()),
+                'ip': ip,
                 'port': 8765,
                 'name': self.system.name,
                 'version': self.system.version,
                 'cameraPort': self.__cameraServer.port
             }
             sock.sendto(json.dumps(msg).encode('utf8'), ('255.255.255.255', 5891))
+            sock.sendto(json.dumps(msg).encode('utf8'), ('192.168.0.255', 5891))
             time.sleep(5)
         sock.close()
         self.__log.i(LogType.BROADCAST, "Broadcast Thread Close")
