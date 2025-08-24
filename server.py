@@ -28,7 +28,7 @@ class Server:
             'touch': self.__commandTouch,
         }
         self.event = mpEvent()
-        self.websocket = None
+        self.websocketList = []
     
     def __commandTouch(self, data):
         self.eventListener.sendEvent('ai', data)
@@ -55,11 +55,19 @@ class Server:
         return {'command': data['command'], 'commands': [str(i) for i in self.__commands.keys()]}
     
     async def send(self, data):
-        await self.websocket.send(data)
+        killList = []
+        for i in self.websocketList:
+            try:
+                await i.send(data)
+            except Exception as e:
+                print('asdsd@as - ', e, flush=True)
+                killList.append(i)
+        for i in killList:
+            del self.websocketList[self.websocketList.index(i)]
 
     def __listener(self, data: dict):
         if data.get('type') == 'log':
-            try: asyncio.run(self.websocket.send(json.dumps({'command':'log', 'data': data['data']})))
+            try: asyncio.run(self.send(json.dumps({'command':'log', 'data': data['data']})))
             except:
                 pass
         if data.get('type') == 'marker_camera':
@@ -72,8 +80,6 @@ class Server:
         return img
     
     async def __client(self, websocket):
-        #try:
-        if (self.websocket != websocket): self.websocket = websocket
         client_id = id(websocket)
         _ip, _port = websocket.remote_address
         self.eventListener.i(LogType.SERVER,
@@ -99,6 +105,7 @@ class Server:
                     'command': 'login', 'data': 'need'
                 }
                 await websocket.send(json.dumps(msg))
+        self.websocketList.append(websocket)
         while not self.event.is_set():
             msg = await websocket.recv()
             msg = json.loads(msg)
