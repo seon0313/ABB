@@ -5,6 +5,7 @@
 - [Project_ABB Program](https://github.com/seon0313/Project_ABB_Program)
 - [ABB Server](https://github.com/seon0313/ABB_Server)
 - [ABB RealTime API](https://github.com/seon0313/ABB_RealTime_AI)
+- [ABB HardWare](https://github.com/seon0313/ABB_Hardware)
 
 ## 목차
 
